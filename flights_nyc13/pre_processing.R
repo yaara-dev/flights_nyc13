@@ -8,6 +8,12 @@ library(tidyverse)
 library(RColorBrewer)
 library(ggplot2)
 
+flights <- flights
+airlines <- airlines
+airports <- airports
+planes <- planes
+weather <- weather
+
 ggplot(flights) +
   aes(x = "", y = dep_delay) +
   geom_boxplot(fill = "#0c4c8a") +
