@@ -21,17 +21,27 @@ weather <- weather
 flights_planes<-merge(flights, planes, by="tailnum")
 flights_full<-merge(flights_planes,weather,by=c("origin","time_hour"))
 summary(flights_full)
-flights_full$hour.y<-as.numeric(flights_full$hour.y)
+
+
 
 # Make dependent variable as a factor (categorical)
-flights_full$origin = as.factor(flights_full$origin)
-flights_full$tailnum = as.factor(flights_full$tailnum)
-flights_full$carrier = as.factor(flights_full$carrier)
-flights_full$dest = as.factor(flights_full$dest)
-flights_full$type = as.factor(flights_full$type)
-flights_full$manufacturer = as.factor(flights_full$manufacturer)
-flights_full$model = as.factor(flights_full$model)
-flights_full$engine = as.factor(flights_full$engine)
+flights_full <- transform(
+  flights_full,
+  origin=as.factor(origin),
+  tailnum=as.factor(tailnum),
+  month.x=as.factor(month.x),
+  day.x=as.factor(day.x),
+  carrier=as.factor(carrier),
+  flight= as.factor(flight),
+  dest=as.factor(dest),
+  type=as.factor(type),
+  model=as.factor(model),
+  engine=as.factor(engine),
+  month.y=as.factor(month.y),
+  day.y=as.factor(day.y),
+  hour.y=as.numeric(hour.y),
+  manufacturer=as.factor(manufacturer)
+)
 
 #identical columns
 identical(flights_full$hour.x, flights_full$hour.y)
