@@ -1,4 +1,13 @@
 ###20.08
+
+#packages and libraries
+install.packages("nycflights13")
+library(nycflights13)
+library(dplyr)
+library(tidyverse)
+library(RColorBrewer)
+library(ggplot2)
+
 ggplot(flights) +
   aes(x = "", y = dep_delay) +
   geom_boxplot(fill = "#0c4c8a") +
