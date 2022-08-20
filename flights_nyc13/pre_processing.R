@@ -2,7 +2,7 @@
 
 #packages and libraries
 #install.packages("nycflights13")
-install.packages("dataPreparation")
+#install.packages("dataPreparation")
 library(dataPreparation)
 library(nycflights13)
 library(dplyr)
@@ -40,7 +40,8 @@ flights_full <- transform(
   month.y=as.factor(month.y),
   day.y=as.factor(day.y),
   hour.y=as.numeric(hour.y),
-  manufacturer=as.factor(manufacturer)
+  manufacturer=as.factor(manufacturer),
+  year.y= as.factor(year.y)
 )
 
 #identical columns
@@ -60,7 +61,7 @@ flights_full <- fast_filter_variables(
 )
 
 #remove irrelevant columns
-flights_full<-select(flights_full, -c(time_hour, arr_delay))
+flights_full<-select(flights_full, -c(time_hour, arr_delay, flight, tailnum, arr_time, dep_time))
 
 different_columns<-colnames(flights_full_old)[!(colnames(flights_full_old) %in% colnames(flights_full))]
 
