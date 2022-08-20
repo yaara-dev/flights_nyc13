@@ -1,7 +1,7 @@
 ###20.08
 
 #packages and libraries
-install.packages("nycflights13")
+#install.packages("nycflights13")
 library(nycflights13)
 library(dplyr)
 library(tidyverse)
@@ -22,27 +22,30 @@ ggplot(flights) +
 boxplot.stats(flights$dep_delay)$out
 
 #merged flights + weather + planes
-combined_df<-merge(flights, planes, by="tailnum")
-combined_df<-merge(combined_df,weather,by=c("origin","time_hour"))
-identical(combined_df$hour.x, combined_df$hour.y)
-identical(combined_df$month.x, combined_df$month.y)
-identical(combined_df$day.x, combined_df$day.y)
+flights_planes<-merge(flights, planes, by="tailnum")
+flights_full<-merge(flights_planes,weather,by=c("origin","time_hour"))
+flights_full$hour.y<-as.numeric(flights_full$hour.y)
+
+#remove identical columns
+identical(flights_full$hour.x, flights_full$hour.y)
+identical(flights_full$month.x, flights_full$month.y)
+identical(flights_full$day.x, flights_full$day.y)
 
 #remove columns
-combined_df <- select(combined_df, -c(time_hour, arr_delay))
+flights_full <- select(flights_full, -c(time_hour, arr_delay))
 
-#display all full ombined_df
-str(combined_df)
+#display all flights_full
+str(flights_full)
 
 # Make dependent variable as a factor (categorical)
-combined_df$origin = as.factor(combined_df$origin)
-combined_df$tailnum = as.factor(combined_df$tailnum)
-combined_df$carrier = as.factor(combined_df$carrier)
-combined_df$dest = as.factor(combined_df$dest)
-combined_df$type = as.factor(combined_df$type)
-combined_df$manufacturer = as.factor(combined_df$manufacturer)
-combined_df$model = as.factor(combined_df$model)
-combined_df$engine = as.factor(combined_df$engine)
+flights_full$origin = as.factor(flights_full$origin)
+flights_full$tailnum = as.factor(flights_full$tailnum)
+flights_full$carrier = as.factor(flights_full$carrier)
+flights_full$dest = as.factor(flights_full$dest)
+flights_full$type = as.factor(flights_full$type)
+flights_full$manufacturer = as.factor(flights_full$manufacturer)
+flights_full$model = as.factor(flights_full$model)
+flights_full$engine = as.factor(flights_full$engine)
 
 #remove NA from dep_delay
-combined_df<-combined_df%>% drop_na(dep_delay)
+flights_full<-flights_full%>% drop_na(dep_delay)
