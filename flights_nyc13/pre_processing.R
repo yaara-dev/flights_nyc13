@@ -38,6 +38,9 @@ identical(flights_full$hour.x, flights_full$hour.y)
 identical(flights_full$month.x, flights_full$month.y)
 identical(flights_full$day.x, flights_full$day.y)
 
+#before processing (drop na and outliers)
+flights_full_old<-flights_full
+
 #remove identical and constant columns
 flights_full <- fast_filter_variables(
   flights_full,
@@ -45,6 +48,8 @@ flights_full <- fast_filter_variables(
   keep_cols = NULL,
   verbose = TRUE
 )
+
+different_columns<-colnames(flights_full_old)[!(colnames(flights_full_old) %in% colnames(flights_full))]
 
 #remove NA from dep_delay
 flights_full<-flights_full%>% drop_na(dep_delay)
