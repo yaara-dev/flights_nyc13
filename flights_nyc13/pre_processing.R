@@ -59,6 +59,9 @@ flights_full <- fast_filter_variables(
   verbose = TRUE
 )
 
+#remove irrelevant columns
+flights_full<-select(flights_full, -c(time_hour, arr_delay))
+
 different_columns<-colnames(flights_full_old)[!(colnames(flights_full_old) %in% colnames(flights_full))]
 
 #remove NA from dep_delay
