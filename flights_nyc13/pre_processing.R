@@ -40,7 +40,8 @@ flights_full <- transform(
   month.y=as.factor(month.y),
   day.y=as.factor(day.y),
   hour.y=as.numeric(hour.y),
-  manufacturer=as.factor(manufacturer)
+  manufacturer=as.factor(manufacturer),
+  year.y=as.factor(year.y)
 )
 
 #identical columns
