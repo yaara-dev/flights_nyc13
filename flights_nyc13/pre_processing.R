@@ -140,13 +140,14 @@ flights_full <-
 #display all flights_full
 str(flights_full)
 
-#divide the flights into 4 groups with equal sizes, according to their dep_delay
-quantile(flights_full$dep_delay)
-quantiles_vec <- c(0.25, 0.5, 0.75, 1)
+#divide the flights into 3 groups with equal sizes, according to their dep_delay
 
-#split dep_delay into 4 categories
-num_categories_dep_delay <- 4
-flights_full_arranged <- flights_full %>% arrange(dep_delay)
+#split dep_delay into 3 categories
+num_categories_dep_delay <- 3
+flights_full_ordered_dep<-flights_full
+flights_full_ordered_dep<-flights_full_ordered_dep %>% arrange(flights_full_ordered_dep$dep_delay)
+
+flights_full_arranged <- flights_full %>% arrange(dep_delay) #same as flights_full_new_dep
 ind_vec <- as.numeric(rownames(flights_full_arranged))
 split_ind <-
   split(ind_vec,
@@ -156,11 +157,24 @@ for (i in 1:length(split_ind)) {
     as.numeric(names(split_ind[i]))
 }
 
-#plot dep_delay categories counts
+#plot flights counts per 3 dep_delay categories
 ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
-                                                                             c('#660000', '#993333', '#CC6666', "#FFCCCC")) +
+                                                                             c('#660000', '#993333', '#CC6666')) + #"#FFCCCC"
   labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+# plot histogram of original dep_delay before changing it into 3 categories with the thresholds
+ggplot(flights_full_new_dep, aes(x=dep_delay)) + 
+  geom_histogram(color="black", fill="white", bins = 40) +
+  geom_vline(
+    xintercept = c(
+      flights_full_ordered_dep$dep_delay[split_ind$`2`[1]],
+      flights_full_ordered_dep$dep_delay[split_ind$`3`[1]]
+    ),
+    linetype = "dashed",
+    color = "red",
+    size = 1.3
+  )
 
 
 # merge manufacturer and model columns into one column
@@ -318,11 +332,13 @@ ggplot(df_manu_model_counts,
 
 # remove model column and manufacturer column from flights_full_arranged
 flights_full_arranged <-
-  select(flights_full_arranged, -c(model, manufacturer))
+  select(flights_full_arranged,-c(model, manufacturer))
+
+#convert dep_delay to factor column
+flights_full_arranged$dep_delay<-as.factor(flights_full_arranged$dep_delay)
+
 str(flights_full_arranged)
 
-flights_full_arranged <-
-  transform(flights_full_arranged, dep_delay = as.factor(dep_delay))
 ########################################################################################
 
 # plot normalized delay per level in each variable
