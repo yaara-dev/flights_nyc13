@@ -18,8 +18,7 @@ flights_weather <-
 
 
 flights_weather1 <-
-  flights_weather %>% filter(dep_delay >= 0) %>% mutate(sched_dep_time_numeric = hour.x + minute /
-                                                          60)
+  flights_weather %>% filter(dep_delay >= 0) %>% mutate(sched_dep_time_numeric = hour.x*60 + minute)
 
 #####
 #correlation between numeric data
