@@ -49,29 +49,7 @@ length(which(is.na(flights_full$wind_gust)))
 
 
 ######
-#remove irrelevant columns
-flights_full <-
-  select(
-    flights_full,
-    -c(
-      time_hour,
-      arr_delay,
-      flight,
-      tailnum,
-      arr_time,
-      dep_time,
-      dest,
-      name,
-      lat,
-      lon,
-      alt,
-      tz,
-      dst,
-      speed,
-      wind_gust,
-      dewp
-    )
-  )
+
 ## cyclic features
 #flights_full$hour_sin = sin(flights_full$hour.x * (2 * pi / 24))
 #flights_full$hour_cos = cos(flights_full$hour.x * (2 * pi / 24))
@@ -87,10 +65,34 @@ flights_full <-
   )
 
 
-
 #remove NA from dep_delay
 flights_full <- flights_full %>% drop_na(dep_delay)
 flights_full <- flights_full %>% drop_na(tzone)
+
+#remove irrelevant columns
+flights_full <-
+  select(
+    flights_full,-c(
+      time_hour,
+      arr_delay,
+      flight,
+      tailnum,
+      arr_time,
+      dep_time,
+      dest,
+      name,
+      lat,
+      lon,
+      alt,
+      tz,
+      dst,
+      speed,
+      wind_gust,
+      dewp,
+      hour.x,
+      minute
+    )
+  )
 
 str(flights_full)
 
@@ -126,9 +128,6 @@ flights_full <- fast_filter_variables(
 different_columns <-
   colnames(flights_full_old)[!(colnames(flights_full_old) %in% colnames(flights_full))]
 
-
-#outliers
-boxplot.stats(flights$dep_delay)$out
 
 #remove sd outliers
 flights_full <-
@@ -319,10 +318,11 @@ ggplot(df_manu_model_counts,
 
 # remove model column and manufacturer column from flights_full_arranged
 flights_full_arranged <-
-  select(flights_full_arranged,-c(model, manufacturer))
+  select(flights_full_arranged, -c(model, manufacturer))
 str(flights_full_arranged)
 
-
+flights_full_arranged <-
+  transform(flights_full_arranged, dep_delay = as.factor(dep_delay))
 ########################################################################################
 
 # plot normalized delay per level in each variable
