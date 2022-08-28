@@ -165,17 +165,23 @@ ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill 
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 # plot histogram of original dep_delay before changing it into 3 categories with the thresholds
-ggplot(flights_full_new_dep, aes(x=dep_delay)) + 
+ggplot(flights_full_ordered_dep, aes(x=dep_delay)) + 
   geom_histogram(color="black", fill="white", bins = 40) +
-  geom_vline(
-    xintercept = c(
-      flights_full_ordered_dep$dep_delay[split_ind$`2`[1]],
-      flights_full_ordered_dep$dep_delay[split_ind$`3`[1]]
-    ),
+  geom_vline(aes(xintercept = flights_full_ordered_dep$dep_delay[split_ind$`2`[1]], color = "early < -4 min"),
     linetype = "dashed",
-    color = "red",
     size = 1.3
-  )
+    ) + 
+  geom_vline(aes(xintercept = flights_full_ordered_dep$dep_delay[split_ind$`3`[1]], color = "delay > 4 min"),
+    linetype = "dashed",
+    size = 1.3
+    ) + 
+  scale_color_manual(name = "Tresholds delay time", values = c("early < -4 min" = "red", "delay > 4 min" = "blue")) +
+  labs(
+    x = "Departure delay time [min]",
+    y = "counts of flights",
+    title = paste('Histogram of departure delay time')
+    ) + 
+  theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
 
 
 # merge manufacturer and model columns into one column
