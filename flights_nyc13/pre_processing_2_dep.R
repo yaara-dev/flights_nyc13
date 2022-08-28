@@ -1,3 +1,5 @@
+# dep delay 2 categories 
+
 #packages and libraries
 list.of.packages <-
   c("dataPreparation",
@@ -141,7 +143,15 @@ flights_full <-
 #display all flights_full
 str(flights_full)
 
-#divide the flights into 3 groups with equal sizes, according to their dep_delay
+#divide the flights into 2 groups according to their dep_delay - flights above 20 min delay, and flights above -10 & until 20 min delay
+flights_full_new_dep_delay <- flights_full[which(flights_full$dep_delay>-10),]
+flights_full_new_dep_delay <-
+  flights_full_new %>% mutate(
+    dep_delay = case_when(
+      dep_delay <= 20 ~ 0,
+      dep_delay >20 ~1
+    )
+  )
 
 #split dep_delay into 3 categories
 num_categories_dep_delay <- 3
@@ -168,19 +178,19 @@ ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill 
 ggplot(flights_full_ordered_dep, aes(x=dep_delay)) + 
   geom_histogram(color="black", fill="white", bins = 40) +
   geom_vline(aes(xintercept = flights_full_ordered_dep$dep_delay[split_ind$`2`[1]], color = "early < -4 min"),
-    linetype = "dashed",
-    size = 1.3
-    ) + 
+             linetype = "dashed",
+             size = 1.3
+  ) + 
   geom_vline(aes(xintercept = flights_full_ordered_dep$dep_delay[split_ind$`3`[1]], color = "delay > 4 min"),
-    linetype = "dashed",
-    size = 1.3
-    ) + 
+             linetype = "dashed",
+             size = 1.3
+  ) + 
   scale_color_manual(name = "Tresholds delay time", values = c("early < -4 min" = "red", "delay > 4 min" = "blue")) +
   labs(
     x = "Departure delay time [min]",
     y = "counts of flights",
     title = paste('Histogram of departure delay time')
-    ) + 
+  ) + 
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
 
 
@@ -409,3 +419,5 @@ engine_df$normalized_dep <-
   engine_df$mean_delay / engine_df$total_counts
 ggplot(engine_df, aes(x = engine, y = normalized_dep)) + geom_bar(stat =
                                                                     "identity") #normalized mean dep_delay per type
+
+
