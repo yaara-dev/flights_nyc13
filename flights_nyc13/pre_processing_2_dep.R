@@ -145,53 +145,40 @@ str(flights_full)
 
 #divide the flights into 2 groups according to their dep_delay - flights above 20 min delay, and flights above -10 & until 20 min delay
 flights_full_new_dep_delay <- flights_full[which(flights_full$dep_delay>-10),]
-flights_full_new_dep_delay <-
-  flights_full_new %>% mutate(
-    dep_delay = case_when(
-      dep_delay <= 20 ~ 0,
-      dep_delay >20 ~1
-    )
-  )
+flights_full_arranged <- flights_full_new_dep_delay %>% arrange(dep_delay) 
 
-#split dep_delay into 3 categories
-num_categories_dep_delay <- 3
-flights_full_ordered_dep<-flights_full
-flights_full_ordered_dep<-flights_full_ordered_dep %>% arrange(flights_full_ordered_dep$dep_delay)
-
-flights_full_arranged <- flights_full %>% arrange(dep_delay) #same as flights_full_new_dep
-ind_vec <- as.numeric(rownames(flights_full_arranged))
-split_ind <-
-  split(ind_vec,
-        cut(seq_along(ind_vec), num_categories_dep_delay, labels = FALSE))
-for (i in 1:length(split_ind)) {
-  flights_full_arranged$dep_delay[unlist(split_ind[i])] <-
-    as.numeric(names(split_ind[i]))
-}
-
-#plot flights counts per 3 dep_delay categories
-ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
-                                                                             c('#660000', '#993333', '#CC6666')) + #"#FFCCCC"
-  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-
-# plot histogram of original dep_delay before changing it into 3 categories with the thresholds
-ggplot(flights_full_ordered_dep, aes(x=dep_delay)) + 
+# plot histogram of original dep_delay before changing it into 2 categories with the threshold
+ggplot(flights_full_arranged, aes(x=dep_delay)) + 
   geom_histogram(color="black", fill="white", bins = 40) +
-  geom_vline(aes(xintercept = flights_full_ordered_dep$dep_delay[split_ind$`2`[1]], color = "early < -4 min"),
+  geom_vline(aes(xintercept = 20, color = "delay > 20 min"),
              linetype = "dashed",
              size = 1.3
   ) + 
-  geom_vline(aes(xintercept = flights_full_ordered_dep$dep_delay[split_ind$`3`[1]], color = "delay > 4 min"),
-             linetype = "dashed",
-             size = 1.3
-  ) + 
-  scale_color_manual(name = "Tresholds delay time", values = c("early < -4 min" = "red", "delay > 4 min" = "blue")) +
+  scale_color_manual(name = "Tresholds delay time", values = c("delay > 20 min" = "red")) +
   labs(
     x = "Departure delay time [min]",
     y = "counts of flights",
     title = paste('Histogram of departure delay time')
   ) + 
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
+
+
+flights_full_arranged <-
+  flights_full_new_dep_delay %>% mutate(
+    dep_delay = case_when(
+      dep_delay <= 20 ~ 0,
+      dep_delay >20 ~1
+    )
+  )
+
+#convert dep_delay to factor column
+flights_full_arranged$dep_delay<- as.factor(flights_full_arranged$dep_delay)
+  
+#plot flights counts per 2 dep_delay categories
+ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
+                                                                             c('#CC6666','#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
+  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 
 # merge manufacturer and model columns into one column
@@ -210,6 +197,7 @@ manu_model_df <-
                                                                                                                n())
 manu_model_df$normalized_counts <-
   manu_model_df$total_counts / sum(manu_model_df$total_counts)
+num_categories_dep_delay<-2
 threshold_uniform_hist <-
   sum(manu_model_df$normalized_counts) / num_categories_dep_delay
 ggplot(manu_model_df, aes(x = dep_delay, y = normalized_counts)) +
@@ -351,8 +339,6 @@ ggplot(df_manu_model_counts,
 flights_full_arranged <-
   select(flights_full_arranged,-c(model, manufacturer))
 
-#convert dep_delay to factor column
-flights_full_arranged$dep_delay<-as.factor(flights_full_arranged$dep_delay)
 
 str(flights_full_arranged)
 
