@@ -145,26 +145,24 @@ str(flights_full)
 
 #divide the flights into 2 groups according to their dep_delay - flights above 20 min delay, and flights above -10 & until 20 min delay
 flights_full_new_dep_delay <- flights_full[which(flights_full$dep_delay>-10),]
-flights_full_arranged <- flights_full_new_dep_delay %>% arrange(dep_delay) 
+flights_full_arranged <- flights_full_new_dep_delay %>% arrange(dep_delay)
 
 # plot histogram of original dep_delay before changing it into 2 categories with the threshold
-ggplot(flights_full_arranged, aes(x=dep_delay)) + 
-  geom_histogram(color="black", fill="white", bins = 40) +
+ggplot(flights_full_arranged, aes(x = dep_delay)) +
+  geom_histogram(color = "black", fill = "white", bins = 40) +
   geom_vline(aes(xintercept = 20, color = "delay > 20 min"),
              linetype = "dashed",
-             size = 1.3
-  ) + 
+             size = 1.3) +
   scale_color_manual(name = "Tresholds delay time", values = c("delay > 20 min" = "red")) +
   labs(
     x = "Departure delay time [min]",
     y = "counts of flights",
     title = paste('Histogram of departure delay time')
-  ) + 
+  ) +
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
 
-
 flights_full_arranged <-
-  flights_full_new_dep_delay %>% mutate(
+  flights_full_arranged %>% mutate(
     dep_delay = case_when(
       dep_delay <= 20 ~ 0,
       dep_delay >20 ~1
@@ -173,13 +171,13 @@ flights_full_arranged <-
 
 #convert dep_delay to factor column
 flights_full_arranged$dep_delay<- as.factor(flights_full_arranged$dep_delay)
-  
+
 #plot flights counts per 2 dep_delay categories
 ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
                                                                              c('#CC6666','#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
   labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-
+  
 
 # merge manufacturer and model columns into one column
 manu_model <-
