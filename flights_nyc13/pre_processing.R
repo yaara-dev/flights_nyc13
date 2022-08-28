@@ -69,6 +69,39 @@ flights_full <-
 flights_full <- flights_full %>% drop_na(dep_delay)
 flights_full <- flights_full %>% drop_na(tzone)
 
+
+str(flights_full)
+
+
+# Make dependent variable as a factor (categorical)
+flights_full <- transform(
+  flights_full,
+  origin = as.factor(origin),
+  carrier = as.factor(carrier),
+  tzone = as.factor(tzone),
+  type = as.factor(type),
+  model = as.factor(model),
+  engine = as.factor(engine),
+  hour.y = as.numeric(hour.y),
+  hour.x = as.numeric(hour.x),
+  manufacturer = as.factor(manufacturer)
+)
+
+#identical columns
+identical(flights_full$hour.x, flights_full$hour.y)
+identical(flights_full$month.x, flights_full$month.y)
+identical(flights_full$day.x, flights_full$day.y)
+
+
+#remove identical and constant columns
+flights_full <- fast_filter_variables(
+  flights_full,
+  level = 2,
+  keep_cols = NULL,
+  verbose = TRUE
+)
+
+
 #remove irrelevant columns
 flights_full <-
   select(
@@ -93,38 +126,6 @@ flights_full <-
       minute
     )
   )
-
-str(flights_full)
-
-
-# Make dependent variable as a factor (categorical)
-flights_full <- transform(
-  flights_full,
-  origin = as.factor(origin),
-  carrier = as.factor(carrier),
-  tzone = as.factor(tzone),
-  type = as.factor(type),
-  model = as.factor(model),
-  engine = as.factor(engine),
-  hour.y = as.numeric(hour.y),
-  manufacturer = as.factor(manufacturer)
-)
-
-#identical columns
-identical(flights_full$hour.x, flights_full$hour.y)
-identical(flights_full$month.x, flights_full$month.y)
-identical(flights_full$day.x, flights_full$day.y)
-
-
-#remove identical and constant columns
-flights_full <- fast_filter_variables(
-  flights_full,
-  level = 2,
-  keep_cols = NULL,
-  verbose = TRUE
-)
-
-
 different_columns <-
   colnames(flights_full_old)[!(colnames(flights_full_old) %in% colnames(flights_full))]
 
