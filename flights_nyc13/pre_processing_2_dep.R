@@ -86,7 +86,8 @@ flights_full <- transform(
   engine = as.factor(engine),
   hour.y = as.numeric(hour.y),
   hour.x = as.numeric(hour.x),
-  manufacturer = as.factor(manufacturer)
+  manufacturer = as.factor(manufacturer),
+  month.x = as.factor(month.x)
 )
 
 #identical columns
@@ -403,5 +404,12 @@ engine_df$normalized_dep <-
   engine_df$mean_delay / engine_df$total_counts
 ggplot(engine_df, aes(x = engine, y = normalized_dep)) + geom_bar(stat =
                                                                     "identity") #normalized mean dep_delay per type
+#pressure
+pressure_df <-
+  flights_full %>% group_by(pressure) %>% summarise(total_counts = n(), mean_delay =
+                                                   mean(dep_delay))
+pressure_df$normalized_dep <-
+  pressure_df$mean_delay / pressure_df$total_counts
+ggplot(pressure_df, aes(x = pressure, y = normalized_dep)) + geom_bar(stat = "identity") #normalized mean dep_delay per type
 
 
