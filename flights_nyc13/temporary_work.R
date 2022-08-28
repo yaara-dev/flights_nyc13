@@ -2,7 +2,7 @@
 #find variables that are similar
 numeric_weather <- sapply(weather, is.numeric)
 numeric_weather_data <- weather[numeric_weather]
-numeric_weather_data <- select(numeric_weather_data, -c(year))
+numeric_weather_data <- select(numeric_weather_data,-c(year))
 corr <-
   round(cor(numeric_weather_data, method = "spearman", use = "complete.obs"),
         2)
@@ -35,7 +35,7 @@ plot_var_vs_norm_dep_delay <- function(var_df) {
   jpeg(sprintf('%s vs normalized dep_delay.jpg', var))
   
   ggplot(var_df, aes(x = var_df[[1]], y = normalized_dep)) + geom_bar(stat =
-                                                                        "identity") + labs(x = sprintf('%s',var))
+                                                                        "identity") + labs(x = sprintf('%s', var))
   
   dev.off()#normalized mean dep_delay per type
 }
@@ -45,7 +45,7 @@ for (var in colnames(flights_full)) {
     vari_df <- get_var_df(c(var))
     plot_var_vs_norm_dep_delay(vari_df)
     
-  }else{
+  } else{
     print('nan')
   }
 }
@@ -91,3 +91,26 @@ ggplot(sched_dep_df, aes(x = sched_dep_time, y = normalized_dep)) + geom_bar(sta
 hist(flights_full$sched_dep_time)
 
 ######
+short_thresh <- 10 #minutes
+middle_thresh <- 50
+
+flights_full_arranged <- flights_full %>% mutate(
+  dep_delay_cat = case_when(
+    as.numeric(dep_delay) < 0 ~ 0
+    as.numeric(dep_delay) <= short_thresh ~ 1 ,
+    as.numeric(dep_delay) > short_thresh &
+      as.numeric(dep_delay) <= middle_thresh ~ 2,
+    as.numeric(dep_delay) > middle_thresh ~ 3,
+    is.na(dep_delay) ~ -1
+  )
+)
+
+
+flights_full_new <- flights_full_old[which(flights_full_old$dep_delay>-10),]
+flights_full_new <-
+  flights_full_new %>% mutate(
+    dep_delay = case_when(
+      dep_delay <= 20 ~ 0,
+      dep_delay >20 ~1
+    )
+  )

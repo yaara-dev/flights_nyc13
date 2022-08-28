@@ -1,17 +1,29 @@
 library(randomForest)
 require(caTools)
 set.seed(101)
-sample = sample.split(flights_full_arranged$dep_delay, SplitRatio = .75)
-train = subset(flights_full_arranged, sample == TRUE)
-test  = subset(flights_full_arranged, sample == FALSE)
+sample_df <- flights_full_arranged[sample(nrow(flights_full_arranged), 50000), ]
+sample = sample.split(sample_df$dep_delay, SplitRatio = .75)
+train = subset(sample_df, sample == TRUE)
+test  = subset(sample_df, sample == FALSE)
 dim(train)
 dim(test)
 rf <- randomForest(
   dep_delay ~.,
   data=train,
-  na.action=na.roughfix
+  na.action=na.roughfix,
+  mtry = 8
 )
 rf
+predTrain <- predict(rf, train, type = "class")
+
+table(predTrain, train$dep_delay)  
+# Predicting on Validation set
+predValid <- predict(rf, test, type = "class")
+# Checking classification accuracy
+mean(predValid == train$dep_delay)                    
+table(predValid,train$dep_delay)
+
+
 unique(flights_full_arranged$dep_delay)
 str(flights_full_arranged) 
 set.seed(120)  # Setting seed
