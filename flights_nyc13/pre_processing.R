@@ -49,29 +49,7 @@ length(which(is.na(flights_full$wind_gust)))
 
 
 ######
-#remove irrelevant columns
-flights_full <-
-  select(
-    flights_full,
-    -c(
-      time_hour,
-      arr_delay,
-      flight,
-      tailnum,
-      arr_time,
-      dep_time,
-      dest,
-      name,
-      lat,
-      lon,
-      alt,
-      tz,
-      dst,
-      speed,
-      wind_gust,
-      dewp
-    )
-  )
+
 ## cyclic features
 #flights_full$hour_sin = sin(flights_full$hour.x * (2 * pi / 24))
 #flights_full$hour_cos = cos(flights_full$hour.x * (2 * pi / 24))
@@ -87,10 +65,10 @@ flights_full <-
   )
 
 
-
 #remove NA from dep_delay
 flights_full <- flights_full %>% drop_na(dep_delay)
 flights_full <- flights_full %>% drop_na(tzone)
+
 
 str(flights_full)
 
@@ -105,6 +83,7 @@ flights_full <- transform(
   model = as.factor(model),
   engine = as.factor(engine),
   hour.y = as.numeric(hour.y),
+  hour.x = as.numeric(hour.x),
   manufacturer = as.factor(manufacturer)
 )
 
@@ -123,6 +102,30 @@ flights_full <- fast_filter_variables(
 )
 
 
+#remove irrelevant columns
+flights_full <-
+  select(
+    flights_full,-c(
+      time_hour,
+      arr_delay,
+      flight,
+      tailnum,
+      arr_time,
+      dep_time,
+      dest,
+      name,
+      lat,
+      lon,
+      alt,
+      tz,
+      dst,
+      speed,
+      wind_gust,
+      dewp,
+      hour.x,
+      minute
+    )
+  )
 different_columns <-
   colnames(flights_full_old)[!(colnames(flights_full_old) %in% colnames(flights_full))]
 
@@ -336,10 +339,6 @@ flights_full_arranged <-
 flights_full_arranged$dep_delay<-as.factor(flights_full_arranged$dep_delay)
 
 str(flights_full_arranged)
-
-
-
-
 
 ########################################################################################
 
