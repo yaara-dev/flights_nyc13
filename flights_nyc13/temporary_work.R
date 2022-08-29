@@ -105,12 +105,20 @@ flights_full_arranged <- flights_full %>% mutate(
   )
 )
 
-
-flights_full_new <- flights_full_old[which(flights_full_old$dep_delay>-10),]
+#####
+flights_full_new <- flights_full_arranged[which(flights_full$dep_delay>-10),]
 flights_full_new <-
-  flights_full_new %>% mutate(
-    dep_delay = case_when(
-      dep_delay <= 20 ~ 0,
-      dep_delay >20 ~1
+  flights_full %>% mutate(
+    new_dep_delay = case_when(
+      dep_delay < 20 ~ 0,
+      dep_delay >=20 ~1
     )
   )
+
+delay <- flights_full_arranged[which(flights_full_arranged$dep_delay==1),]
+no_delay <- flights_full_arranged[which(flights_full_arranged$dep_delay==0),]
+
+delay_sample <- sample_n(delay, 50000)
+no_delay_sample <- sample_n(no_delay, 50000)
+
+all_sampled_delays <- rbind(delay_sample,no_delay_sample)
