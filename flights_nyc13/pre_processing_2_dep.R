@@ -92,7 +92,7 @@ flights_full <- transform(
 
 #identical columns
 identical(flights_full$hour.x, flights_full$hour.y)
-identical(flights_full$month.x, flights_full$month.y)
+identical(flights_full$month.x, as.factor(flights_full$month.y))
 identical(flights_full$day.x, flights_full$day.y)
 
 
@@ -115,7 +115,6 @@ flights_full <-
       tailnum,
       arr_time,
       dep_time,
-      dest,
       name,
       lat,
       lon,
@@ -154,7 +153,7 @@ ggplot(flights_full_arranged, aes(x = dep_delay)) +
   geom_vline(aes(xintercept = 20, color = "delay > 20 min"),
              linetype = "dashed",
              size = 1.3) +
-  scale_color_manual(name = "Tresholds delay time", values = c("delay > 20 min" = "red")) +
+  scale_color_manual(name = "Treshold delay time", values = c("delay > 20 min" = "red")) +
   labs(
     x = "Departure delay time [min]",
     y = "counts of flights",
@@ -162,11 +161,17 @@ ggplot(flights_full_arranged, aes(x = dep_delay)) +
   ) +
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
 
+# percentage of dep_delay=0
+(length(which(flights_full_arranged$dep_delay<(20))))/nrow(flights_full_arranged) 
+# percentage of dep_delay=1
+(length(which(flights_full_arranged$dep_delay>=(20))))/nrow(flights_full_arranged)
+
+#change dep_delay column into categories (0 / 1)
 flights_full_arranged <-
   flights_full_arranged %>% mutate(
     dep_delay = case_when(
-      dep_delay <= 20 ~ 0,
-      dep_delay >20 ~1
+      dep_delay < 20 ~ 0,
+      dep_delay >= 20 ~1
     )
   )
 
@@ -187,8 +192,84 @@ manu_model <-
         sep = "_")
 flights_full_arranged$manu_model <- manu_model
 
-levels_manu_model <-
-  levels(factor(flights_full_arranged$manu_model))
+
+# permutation function
+levels_model<-levels(factor(flights_full_arranged$model)) #levels of model
+levels_manufacturer<-levels(factor(flights_full_arranged$manufacturer)) #levels of manufacturer
+levels_manu_model <- levels(factor(flights_full_arranged$manu_model)) #levels of manu_model
+levels_dest<-levels(factor(flights_full_arranged$dest)) #levels of destinations
+levels_seats<-levels(factor(flights_full_arranged$seats)) #levels of seats
+
+origin_num_delay_var<-function(var_name,levels_var) {
+  origin_delay_vec<-sapply(levels_var, simplify = TRUE, FUN=function(one_level){
+    df_summarize<-flights_full_arranged %>% filter((!! sym(var_name))==one_level) %>% group_by(dep_delay, .drop=FALSE) %>% tally
+    number_delay_in_level<-df_summarize$n[df_summarize$dep_delay==1]
+    number_delay_in_level
+  })
+  origin_delay_vec
+}
+
+origin_num_delay_model<-origin_num_delay_var('model',levels_model)
+origin_num_delay_manufacturer<-origin_num_delay_var('manufacturer',levels_manufacturer)
+origin_num_delay_manu_model<-origin_num_delay_var('manu_model',levels_manu_model)
+origin_num_delay_dest<-origin_num_delay_var('dest',levels_dest)
+origin_num_delay_seats<-origin_num_delay_var('seats',levels_seats)
+
+
+perm_vec_var<-function(levels_var_model, origin_num_delay_var){
+  perm_vec<-rep(1, length(levels_var_model))
+  perm_vec<-setNames(perm_vec, names(origin_num_delay_var))  
+}
+
+perm_ndelay_vec_model<-perm_vec_var(levels_model, origin_num_delay_model)
+perm_ndelay_vec_manufacturer<-perm_vec_var(levels_manufacturer, origin_num_delay_manufacturer)
+perm_ndelay_vec_manu_model<-perm_vec_var(levels_manu_model, origin_num_delay_manu_model)
+perm_ndelay_vec_dest<-perm_vec_var(levels_dest, origin_num_delay_dest)
+perm_ndelay_vec_seats<-perm_vec_var(levels_seats, origin_num_delay_seats)
+
+create_perm_ndelay_vec_var<-function(flights_full_perm, var_name,levels_var, origin_num_delay_var, perm_vec_var) {
+  perm_num_delay_var <- sapply(levels_var, simplify = TRUE, FUN=function(one_level){
+    df_summarize<-flights_full_perm %>% filter((!! sym(var_name))==one_level) %>% group_by(dep_delay, .drop=FALSE) %>% tally
+    number_delay_in_level<-df_summarize$n[df_summarize$dep_delay==1]
+    number_delay_in_level
+  })
+  ind_greater<-which(perm_num_delay_var>=origin_num_delay_var)
+  perm_vec_var[ind_greater]<-perm_vec_var[ind_greater]+1
+  perm_vec_var
+}
+
+num_perm<-1000
+for (iter in 1:num_perm){
+  print(iter)
+  flights_full_perm<-transform(flights_full_arranged, dep_delay = sample(dep_delay))
+  perm_ndelay_vec_model<-create_perm_ndelay_vec_var(flights_full_perm, 'model', levels_model, origin_num_delay_model, perm_ndelay_vec_model)
+  perm_ndelay_vec_manufacturer<-create_perm_ndelay_vec_var(flights_full_perm, 'manufacturer', levels_manufacturer, origin_num_delay_manufacturer, perm_ndelay_vec_manufacturer)
+  perm_ndelay_vec_manu_model<-create_perm_ndelay_vec_var(flights_full_perm, 'manu_model', levels_manu_model, origin_num_delay_manu_model, perm_ndelay_vec_manu_model)
+  perm_ndelay_vec_dest<-create_perm_ndelay_vec_var(flights_full_perm, 'dest', levels_dest, origin_num_delay_dest, perm_ndelay_vec_dest)
+  perm_ndelay_vec_seats<-create_perm_ndelay_vec_var(flights_full_perm, 'seats', levels_seats, origin_num_delay_seats, perm_ndelay_vec_seats)
+}
+
+# save perm_ndelay_vec_var output from permutations to csv (as tibble data frmae)
+perm_ndelay_vec_model_df = tibble(name = names(perm_ndelay_vec_model), value = perm_ndelay_vec_model)
+write.table(perm_ndelay_vec_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_model_df.csv",  sep=",",  row.names=FALSE)
+perm_ndelay_vec_manufacturer_df = tibble(name = names(perm_ndelay_vec_manufacturer), value = perm_ndelay_vec_manufacturer)
+write.table(perm_ndelay_vec_manufacturer_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manufacturer_df.csv",  sep=",",  row.names=FALSE)
+perm_ndelay_vec_manu_model_df = tibble(name = names(perm_ndelay_vec_manu_model), value = perm_ndelay_vec_manu_model)
+write.table(perm_ndelay_vec_manu_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manu_model_df.csv",  sep=",",  row.names=FALSE)
+perm_ndelay_vec_dest_df = tibble(name = names(perm_ndelay_vec_dest), value = perm_ndelay_vec_dest)
+write.table(perm_ndelay_vec_dest_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_dest_df.csv",  sep=",",  row.names=FALSE)
+perm_ndelay_vec_seats_df = tibble(name = names(perm_ndelay_vec_seats), value = perm_ndelay_vec_seats)
+write.table(perm_ndelay_vec_seats_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_seats_df.csv",  sep=",",  row.names=FALSE)
+
+
+p_val_levels_model<- perm_ndelay_vec_model/num_perm
+p_val_levels_manufacturer<- perm_ndelay_vec_manufacturer/num_perm
+p_val_levels_manu_model<- perm_ndelay_vec_manu_model/num_perm
+p_val_levels_dest<- perm_ndelay_vec_dest/num_perm
+p_val_levels_seats<- perm_ndelay_vec_seats/num_perm
+
+
+
 
 #bar plot of manufacturer_model = "AGUSTA SPA_A109E" for example
 manu_model_df <-
