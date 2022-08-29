@@ -81,7 +81,7 @@ flights_full <- flights_full %>% mutate(week_num = (year(time_hour) - year(min(t
 directions <- read.csv('wind_directions.csv')
 
 flights_full <- flights_full %>%
-  mutate(wd_cardinal = cut(
+  mutate(wind_dir = cut(
     as.numeric(wind_dir),
     breaks = c(0, directions$degree_max, 360),
     labels = c(directions$cardinal, 'N')
