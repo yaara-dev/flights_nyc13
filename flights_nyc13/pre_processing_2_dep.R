@@ -111,12 +111,13 @@ flights_full <- transform(
   hour.y = as.numeric(hour.y),
   hour.x = as.numeric(hour.x),
   manufacturer = as.factor(manufacturer),
-  month.x = as.factor(month.x)
+  month.x = as.factor(month.x),
+  month.y = as.factor(month.y)
 )
 
 #identical columns
 identical(flights_full$hour.x, flights_full$hour.y)
-identical(flights_full$month.x, as.factor(flights_full$month.y))
+identical(flights_full$month.x, flights_full$month.y)
 identical(flights_full$day.x, flights_full$day.y)
 
 
@@ -149,7 +150,8 @@ flights_full <-
       wind_gust,
       dewp,
       hour.x,
-      minute
+      minute,
+      day.x
     )
   )
 different_columns <-
@@ -222,87 +224,6 @@ manu_model <-
         flights_full_arranged$model,
         sep = "_")
 flights_full_arranged$manu_model <- manu_model
-
-
-levels_manu_model <-
-  levels(factor(flights_full_arranged$manu_model))
-
-#bar plot of manufacturer_model = "AGUSTA SPA_A109E" for example
-manu_model_df <-
-  flights_full_arranged %>% filter(manu_model == levels_manu_model[1]) %>% group_by(dep_delay) %>% summarise(total_counts =
-                                                                                                               n())
-manu_model_df$normalized_counts <-
-  manu_model_df$total_counts / sum(manu_model_df$total_counts)
-num_categories_dep_delay <- 2
-threshold_uniform_hist <-
-  sum(manu_model_df$normalized_counts) / num_categories_dep_delay
-ggplot(manu_model_df, aes(x = dep_delay, y = normalized_counts)) +
-  geom_bar(stat = "identity") + labs(
-    x = "Departure delay categories",
-    y = "normalized counts of flights",
-    title = paste('manu_model =', levels_manu_model[1])
-  ) + theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold")) +
-  geom_hline(
-    yintercept = threshold_uniform_hist,
-    linetype = "dashed",
-    color = "red",
-    size = 1.5
-  )
-SSE <-
-  sum((manu_model_df$normalized_counts - threshold_uniform_hist) ^
-        2)
-SSE
-SSE_vec_manu_model <- sapply(levels_manu_model, function(a_model) {
-  manu_model_df <-
-    flights_full_arranged %>% filter(manu_model == a_model) %>% group_by(dep_delay) %>% summarise(total_counts =
-                                                                                                    n())
-  manu_model_df$normalized_counts <-
-    manu_model_df$total_counts / sum(manu_model_df$total_counts)
-  threshold_uniform_hist <-
-    sum(manu_model_df$normalized_counts) / num_categories_dep_delay
-  SSE <-
-    sum((manu_model_df$normalized_counts - threshold_uniform_hist) ^ 2)
-  SSE
-})
-
-hist(SSE_vec_manu_model, breaks = 20) #histogram of SSE models vector
-# split 'manu_model' into 4 categories
-manu_model_SSE_df <-
-  data.frame(manu_model = names(SSE_vec_manu_model), SSE = SSE_vec_manu_model)
-rownames(manu_model_SSE_df) <-
-  1:length(manu_model_SSE_df$manu_model)
-flights_counts_manu_model_df <-
-  flights_full_arranged %>% group_by(manu_model) %>% summarise(total_counts =
-                                                                 n())
-manu_model_SSE_df <-
-  merge(manu_model_SSE_df, flights_counts_manu_model_df, by = "manu_model") #add flights counts per manu_model to manu_model_SSE_df
-manu_model_SSE_df <-
-  manu_model_SSE_df %>% arrange(SSE_vec_manu_model) #arrange df in ascending order by SSE value per manu_model
-# barplot SSE value per manufacturer
-ggplot(manu_model_SSE_df, aes(x = reorder(manu_model, SSE) , y = SSE)) + geom_bar(stat =
-                                                                                    "identity") + labs(title = "SSE value per manu_model", x = "manu_model", y =
-                                                                                                         "SSE value") +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 19, face = "bold"),
-    axis.text.x = element_text(
-      angle = 90,
-      vjust = 0.5,
-      hjust = 1,
-      size = 6
-    )
-  )
-ggplot(manu_model_SSE_df, aes(x = reorder(manu_model, SSE) , y = total_counts)) + geom_bar(stat =
-                                                                                             "identity") + labs(title = "flights counts per manu_model", x = "manu_model", y =
-                                                                                                                  "flights counts") +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 19, face = "bold"),
-    axis.text.x = element_text(
-      angle = 90,
-      vjust = 0.5,
-      hjust = 1,
-      size = 6
-    )
-  )
 
 
 # permutation function - skip it because it is already done 
