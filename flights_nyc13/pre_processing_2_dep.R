@@ -390,6 +390,18 @@ flights_full_arranged <-
 flights_full_arranged$manu_model<-as.factor(flights_full_arranged$manu_model) #convert back to factor variable
 levels(flights_full_arranged$manu_model)
 
+#change manu_model column into  one-letter categories
+flights_full_arranged_bf_change<-flights_full_arranged
+manu_model_levels_after_change<-data.frame(manu_model=levels(flights_full_arranged$manu_model))
+manu_model_levels_after_change$new_name<-letters[1:nrow(manu_model_levels_after_change)]
+manu_model_levels_after_change$new_name[manu_model_levels_after_change$manu_model=="other_manu_model"]<- "other"
+manu_model_letter_cat<-lapply(flights_full_arranged$manu_model, function(row){
+  y<-manu_model_levels_after_change$new_name[which(row==manu_model_levels_after_change$manu_model)]
+  y
+})
+flights_full_arranged$manu_model<-as.factor(unlist(manu_model_letter_cat))
+
+
 #change destination levels in flights_full_arranged
 flights_full_arranged$dest<-as.character(flights_full_arranged$dest)
 dests_to_change<-perm_ndelay_dest_df$dest[which(perm_ndelay_dest_df$p_adj<=0.05)] #filtered levels (were kept)
@@ -399,6 +411,17 @@ flights_full_arranged <-
 
 flights_full_arranged$dest<-as.factor(flights_full_arranged$dest) #convert back to factor variable
 levels(flights_full_arranged$dest)
+
+
+#change destination column into number categories
+dest_levels_after_change<-data.frame(dest=levels(flights_full_arranged$dest))
+dest_levels_after_change$new_name<-1:nrow(dest_levels_after_change)
+dest_number_cat<-lapply(flights_full_arranged$dest, function(row){
+  y<-which(row==dest_levels_after_change$dest)
+  y
+})
+flights_full_arranged$dest<-as.factor(unlist(dest_number_cat))
+
 
 #change seats levels in flights_full_arranged
 flights_full_arranged$seats<-as.character(flights_full_arranged$seats)
