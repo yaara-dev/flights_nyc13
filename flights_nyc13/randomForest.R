@@ -46,7 +46,7 @@ rf <- randomForest(
   dep_delay ~ .,
   data = train,
   #na.action = na.roughfix,
-  mtry = 10,
+  mtry = 6,
   ntree = 500
 )
 rf

@@ -2,7 +2,7 @@
 #find variables that are similar
 numeric_weather <- sapply(weather, is.numeric)
 numeric_weather_data <- weather[numeric_weather]
-numeric_weather_data <- select(numeric_weather_data,-c(year))
+numeric_weather_data <- select(numeric_weather_data, -c(year))
 corr <-
   round(cor(numeric_weather_data, method = "spearman", use = "complete.obs"),
         2)
@@ -22,37 +22,55 @@ heatmap(
 #### todo- fix function####
 #plot dewp vs temp
 plot(flights_full$dewp, flights_full$temp)
-get_var_df <- function(var_name) {
+plot_descriptive <- function(var_name, flights_data) {
+  print(get(var_name))
   var_df <-
-    flights_full %>% group_by(get(var_name)) %>% summarise(total_counts = n(),
+    flights_data %>% group_by(get(var_name)) %>% summarise(total_counts = n(),
                                                            mean_delay = mean(dep_delay))
-  return(var_df)
-}
-plot_var_vs_norm_dep_delay <- function(var_df) {
   var_df$normalized_dep <-
     var_df$mean_delay / var_df$total_counts
   
-  jpeg(sprintf('%s vs normalized dep_delay.jpg', var))
+  print(var_df)
+  #jpeg(sprintf('%s vs normalized dep_delay.jpg', var))
+  plot.new()
+  #normalized mean dep_delay
+  print(
+    ggplot(var_df, aes(x = var_df[[1]], y = normalized_dep)) + geom_bar(stat =
+                                                                          "identity") + labs(
+                                                                            x = sprintf('%s', var_name),
+                                                                            title = sprintf('%s vs normalized dep_delay', var_name)
+                                                                          )
+  )
+  Sys.sleep(2)
   
-  ggplot(var_df, aes(x = var_df[[1]], y = normalized_dep)) + geom_bar(stat =
-                                                                        "identity") + labs(x = sprintf('%s', var))
+  #flight counts
+  print(
+    ggplot(aes(x = get(var_name)), data = flights_data) +
+      geom_bar() + labs(x = sprintf('%s', var_name)) + title(main = sprintf('Number of flights per %s', var_name))
+  )
+  Sys.sleep(2)
   
-  dev.off()#normalized mean dep_delay per type
+  
+  #boxplot
+  #box <- boxplot(dep_delay ~ get(var_name), data = flights_data) + title(main = sprintf(' %s', var))
+  #dev.off()
+  #plots <- list(delay, count)#, box)
+  #return(plots)
 }
 for (var in colnames(flights_full)) {
-  if (is.numeric(flights_full[, eval(as.name(var))])) {
-    print(as.name(var))
-    vari_df <- get_var_df(c(var))
-    plot_var_vs_norm_dep_delay(vari_df)
-    
-  } else{
-    print('nan')
-  }
-}
+  #if (is.numeric(flights_full_arranged[, eval(as.name(var))])) {
+  print(as.name(var))
+  vari_df <- plot_descriptive(c(var), flights_full)}
+  plot_var_vs_norm_dep_delay(vari_df, flights_full_arranged)
+  
+  # } else{
+  #  print('nan')
+  # }
 
 
-p_df1 <- get_var_df(c('pressure'))
-plot_var_vs_norm_dep_delay(var_df)
+apply(flights_full,2,plot_descriptive, flights_full)
+p_df1 <- plot_descriptive(c('pressure'), flights_full)
+plot_var_vs_norm_dep_delay(p_df1, flights_full_arranged)
 #check dewp variable
 dewp_df <-
   flights_full %>% group_by(dewp) %>% summarise(total_counts = n(), mean_delay =
@@ -106,19 +124,18 @@ flights_full_arranged <- flights_full %>% mutate(
 )
 
 #####
-flights_full_new <- flights_full_arranged[which(flights_full$dep_delay>-10),]
 flights_full_new <-
-  flights_full %>% mutate(
-    new_dep_delay = case_when(
-      dep_delay < 20 ~ 0,
-      dep_delay >=20 ~1
-    )
-  )
+  flights_full_arranged[which(flights_full$dep_delay > -10), ]
+flights_full_new <-
+  flights_full %>% mutate(new_dep_delay = case_when(dep_delay < 20 ~ 0,
+                                                    dep_delay >= 20 ~ 1))
 
-delay <- flights_full_arranged[which(flights_full_arranged$dep_delay==1),]
-no_delay <- flights_full_arranged[which(flights_full_arranged$dep_delay==0),]
+delay <-
+  flights_full_arranged[which(flights_full_arranged$dep_delay == 1), ]
+no_delay <-
+  flights_full_arranged[which(flights_full_arranged$dep_delay == 0), ]
 
 delay_sample <- sample_n(delay, 50000)
 no_delay_sample <- sample_n(no_delay, 50000)
 
-all_sampled_delays <- rbind(delay_sample,no_delay_sample)
+all_sampled_delays <- rbind(delay_sample, no_delay_sample)
