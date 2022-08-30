@@ -84,7 +84,8 @@ flights_full <- transform(
   engine = as.factor(engine),
   hour.y = as.numeric(hour.y),
   hour.x = as.numeric(hour.x),
-  manufacturer = as.factor(manufacturer)
+  manufacturer = as.factor(manufacturer),
+  month.x = as.factor(month.x)
 )
 
 #identical columns
@@ -175,7 +176,7 @@ ggplot(flights_full_ordered_dep, aes(x=dep_delay)) +
     linetype = "dashed",
     size = 1.3
     ) + 
-  scale_color_manual(name = "Tresholds delay time", values = c("early < -4 min" = "red", "delay > 4 min" = "blue")) +
+  scale_color_manual(name = "Tresholds delay time", values = c("early < -4 min" = "red", "delay  4 min" = "blue")) +
   labs(
     x = "Departure delay time [min]",
     y = "counts of flights",
