@@ -400,7 +400,7 @@ manu_model_letter_cat<-lapply(flights_full_arranged$manu_model, function(row){
   y
 })
 flights_full_arranged$manu_model<-as.factor(unlist(manu_model_letter_cat))
-
+levels(flights_full_arranged$manu_model)
 
 #change destination levels in flights_full_arranged
 flights_full_arranged$dest<-as.character(flights_full_arranged$dest)
@@ -421,7 +421,7 @@ dest_number_cat<-lapply(flights_full_arranged$dest, function(row){
   y
 })
 flights_full_arranged$dest<-as.factor(unlist(dest_number_cat))
-
+levels(flights_full_arranged$dest)
 
 #change seats levels in flights_full_arranged
 flights_full_arranged$seats<-as.character(flights_full_arranged$seats)
