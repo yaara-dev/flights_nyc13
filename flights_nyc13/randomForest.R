@@ -13,6 +13,12 @@ balanced.data <-
   )$data
 
 table(balanced.data$dep_delay)
+#plot flights counts per 2 dep_delay categories
+ggplot(balanced.data, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
+                                                                             c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
+  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
 flights_full_arranged <-
   flights_full_arranged %>% drop_na(air_time,
                                     year.y,
@@ -33,8 +39,8 @@ fit <- ranger(
   data = train,
   num.trees = 1000,
  # max.depth = 10,
-  importance = 'permutation',
-  scale.permutation.importance = TRUE,
+ # importance = 'permutation',
+  #scale.permutation.importance = TRUE,
   verbose = TRUE,
  # min.node.size = 10,
   #splitrule = "extratrees"
@@ -46,7 +52,11 @@ pred <- predict(fit, test)#$predictions
 confusion <- table(test$dep_delay, pred$predictions)
 confusion
 #todo - fix plot
-plot(confusion)
+plot(confusion,
+     xlab = 'Predicted',
+     ylab = 'True',
+  main= sprintf('Predicted vs Obsvered
+ OOB prediction error: %s',round(fit$prediction.error, 3))) 
 predicted_observed_df <- as.data.frame(cbind(test$dep_delay, pred$predictions))
 
 test %>%
