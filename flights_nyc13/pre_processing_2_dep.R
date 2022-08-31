@@ -359,7 +359,6 @@ perm_ndelay_seats_df<-perm_seats_df[[1]]
 perm_seats_df[[2]]
 perm_seats_df[[3]]
 
-
 #change model levels in flights_full_arranged
 flights_full_arranged$model<-as.character(flights_full_arranged$model)
 models_to_change<-perm_ndelay_model_df$model[which(perm_ndelay_model_df$p_adj<=0.05)] #filtered levels (were kept)
@@ -369,6 +368,19 @@ flights_full_arranged <-
 
 flights_full_arranged$model<-as.factor(flights_full_arranged$model) #convert back to factor variable
 levels(flights_full_arranged$model)
+
+#change model levels into  one-letter categories
+flights_full_arranged_bf_change<-flights_full_arranged
+model_levels_after_change<-data.frame(model=levels(flights_full_arranged$model))
+model_levels_after_change$new_name<-letters[1:nrow(model_levels_after_change)]
+model_levels_after_change$new_name[model_levels_after_change$model=="other_model"]<- "other"
+model_letter_cat<-lapply(flights_full_arranged$model, function(row){
+  y<- model_levels_after_change$new_name[which(row==model_levels_after_change$model)]
+  y
+})
+flights_full_arranged$model<-as.factor(unlist(model_letter_cat))
+levels(flights_full_arranged$model)
+
 
 #change manufacturer levels in flights_full_arranged
 flights_full_arranged$manufacturer<-as.character(flights_full_arranged$manufacturer)
