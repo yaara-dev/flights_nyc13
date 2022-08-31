@@ -151,7 +151,8 @@ flights_full <-
       dewp,
       hour.x,
       minute,
-      day.x
+      day.x,
+      air_time
     )
   )
 different_columns <-
