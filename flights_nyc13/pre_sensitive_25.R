@@ -1,11 +1,11 @@
-##### sensitivity check - 15
+##### sensitivity check - 25
 
 # dep delay 2 categories
 
 #display all flights_full
 str(flights_full)
 
-#divide the flights into 2 groups according to their dep_delay - flights above 15 min delay, and flights above -10 & until 15 min delay
+#divide the flights into 2 groups according to their dep_delay - flights above 25 min delay, and flights above -10 & until 25 min delay
 
 flights_full_new_dep_delay <- flights_full[which(flights_full$dep_delay>-10),]
 flights_full_arranged <- flights_full_new_dep_delay %>% arrange(dep_delay)
@@ -13,7 +13,7 @@ flights_full_arranged <- flights_full_new_dep_delay %>% arrange(dep_delay)
 # plot histogram of original dep_delay before changing it into 2 categories with the threshold
 ggplot(flights_full_arranged, aes(x = dep_delay)) +
   geom_histogram(color = "black", fill = "white", bins = 40) +
-  geom_vline(aes(xintercept = 15, color = "delay > 20 min"),
+  geom_vline(aes(xintercept = 25, color = "delay > 20 min"),
              linetype = "dashed",
              size = 1.3) +
   
@@ -27,17 +27,17 @@ ggplot(flights_full_arranged, aes(x = dep_delay)) +
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
 
 # percentage of dep_delay=0
-(length(which(flights_full_arranged$dep_delay<(15))))/nrow(flights_full_arranged) 
+(length(which(flights_full_arranged$dep_delay<(25))))/nrow(flights_full_arranged) 
 # percentage of dep_delay=1
-(length(which(flights_full_arranged$dep_delay>=(15))))/nrow(flights_full_arranged)
+(length(which(flights_full_arranged$dep_delay>=(25))))/nrow(flights_full_arranged)
 
 #change dep_delay column into categories (0 / 1)
 flights_full_arranged <-
   
   flights_full_arranged %>% mutate(
     dep_delay = case_when(
-      dep_delay < 15 ~ 0,
-      dep_delay >= 15 ~1
+      dep_delay < 25 ~ 0,
+      dep_delay >= 25 ~1
     )
   )
 
@@ -120,23 +120,23 @@ levels_seats<-levels(factor(flights_full_arranged$seats)) #levels of seats
 # 
 # #save perm_ndelay_vec_var output from permutations to csv (as tibble data frmae)
 # perm_ndelay_vec_model_df = tibble(name = names(perm_ndelay_vec_model), value = perm_ndelay_vec_model)
-# write.table(perm_ndelay_vec_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_model_df_15_1.csv",  sep=",",  row.names=FALSE)
+# write.table(perm_ndelay_vec_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_model_df_25_1.csv",  sep=",",  row.names=FALSE)
 # perm_ndelay_vec_manufacturer_df = tibble(name = names(perm_ndelay_vec_manufacturer), value = perm_ndelay_vec_manufacturer)
-# write.table(perm_ndelay_vec_manufacturer_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manufacturer_df_15_1.csv",  sep=",",  row.names=FALSE)
+# write.table(perm_ndelay_vec_manufacturer_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manufacturer_df_25_1.csv",  sep=",",  row.names=FALSE)
 # perm_ndelay_vec_manu_model_df = tibble(name = names(perm_ndelay_vec_manu_model), value = perm_ndelay_vec_manu_model)
-# write.table(perm_ndelay_vec_manu_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manu_model_df_15_1.csv",  sep=",",  row.names=FALSE)
+# write.table(perm_ndelay_vec_manu_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manu_model_df_25_1.csv",  sep=",",  row.names=FALSE)
 # perm_ndelay_vec_dest_df = tibble(name = names(perm_ndelay_vec_dest), value = perm_ndelay_vec_dest)
-# write.table(perm_ndelay_vec_dest_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_dest_df_15_1.csv",  sep=",",  row.names=FALSE)
+# write.table(perm_ndelay_vec_dest_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_dest_df_25_1.csv",  sep=",",  row.names=FALSE)
 # perm_ndelay_vec_seats_df = tibble(name = names(perm_ndelay_vec_seats), value = perm_ndelay_vec_seats)
-# write.table(perm_ndelay_vec_seats_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_seats_df_15_1.csv",  sep=",",  row.names=FALSE)
+# write.table(perm_ndelay_vec_seats_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_seats_df_25_1.csv",  sep=",",  row.names=FALSE)
 
 # #merge all df from permutation test to 1 summed df for each variable
 # merge_df<-function(var_name) {
 #   # before merging all dfs observed from multiple observations
-#   perm_ndelay_var_df_1 <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_",var_name,"_df_15_1.csv", sep=""),  sep=",", header=TRUE)
-#   perm_ndelay_var_df_2 <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_",var_name,"_df_15_2.csv", sep=""),  sep=",", header=TRUE)
-#     perm_ndelay_var_df_1$value <- perm_ndelay_var_df_1$value + perm_ndelay_var_df_2$value -1
-#   write.table(perm_ndelay_var_df_1 , file = paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_merged_vec_", var_name,"_df_15.csv", sep=""),  sep=",",  row.names=FALSE)
+#   perm_ndelay_var_df_1 <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_",var_name,"_df_25_1.csv", sep=""),  sep=",", header=TRUE)
+#   perm_ndelay_var_df_2 <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_",var_name,"_df_25_2.csv", sep=""),  sep=",", header=TRUE)
+#   perm_ndelay_var_df_1$value <- perm_ndelay_var_df_1$value + perm_ndelay_var_df_2$value -1
+#   write.table(perm_ndelay_var_df_1 , file = paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_merged_vec_", var_name,"_df_25.csv", sep=""),  sep=",",  row.names=FALSE)
 #   perm_ndelay_var_df_1
 # }
 # model_df_merged<-merge_df("model")
@@ -149,7 +149,7 @@ levels_seats<-levels(factor(flights_full_arranged$seats)) #levels of seats
 #display plots of p-val for each level and flights count for each level
 num_perm<-1000
 perm_result_var_df<-function(var_name) {
-  perm_ndelay_var_df <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_merged_vec_",var_name,"_df_15.csv", sep=""),  sep=",", header=TRUE)
+  perm_ndelay_var_df <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_merged_vec_",var_name,"_df_25.csv", sep=""),  sep=",", header=TRUE)
   colnames(perm_ndelay_var_df)[1]<-var_name
   perm_ndelay_var_df$p_val<- perm_ndelay_var_df$value/num_perm
   perm_ndelay_var_df$p_adj<-p.adjust(perm_ndelay_var_df$p_val, method = "BH")

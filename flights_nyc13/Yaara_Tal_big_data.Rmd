@@ -1,0 +1,44 @@
+---
+title: "Big Data Project -\n Prediction of departure delay flights"
+author: "Yaara Diamant & Tal Goldberg"
+date: "2022-08-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+
+```{r cars}
+summary(cars)
+```
+
+## Research Aim
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+## Data
+
+Our analysis is based on public flights dataset taken from "nycflights13" R package.This package contains information about all flights that departed from NYC at 2013. We used additional datasets from this package which provide extensive information about the flights. Thus we merged the 'planes' dataset which containes a construction information about each plane, by 'tailnum' variable column. 
+
+
+## Exploratory data analysis (EDA)
+
+
+
+
+## Inference
+
+
+
+## Conclusion
