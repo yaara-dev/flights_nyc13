@@ -499,7 +499,6 @@ manu_model_letter_cat <-
 flights_full_arranged$manu_model <-
   as.factor(unlist(manu_model_letter_cat))
 
-
 #change destination levels in flights_full_arranged
 flights_full_arranged$dest <- as.character(flights_full_arranged$dest)
 dests_to_change <-
