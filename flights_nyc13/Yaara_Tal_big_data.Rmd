@@ -44,7 +44,8 @@ list.of.packages <-
     "lubridate",
     "ROSE",
     "ranger",
-    "gridExtra"
+    "gridExtra",
+    "caret" 
   )
 new.packages <-
   list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
@@ -65,12 +66,15 @@ library(ROSE)
 library(caret) 
 ```
 
+```{r}
 flights <- flights
 airports <- airports
 planes <- planes
 weather <- weather
+```
 
-
+Merge datsets with information about flights, planes, weather and airports
+```{r}
 #merged flights + weather + planes + airports(tzone)
 flights_planes <- merge(flights, planes, by = "tailnum")
 flights_planes_weather <-
@@ -81,6 +85,7 @@ flights_full <-
         by.x = c("dest"),
         by.y = c("faa"))
 
+flights_full_old <- flights_full
 
 summary(flights_full)
 
@@ -273,7 +278,7 @@ flights_full_arranged$manu_model <- manu_model
 ```
 
 #### categories reduction in factorial variables using permutation test
-In order to optimize our model we decreased number of categories (levels) in factorial variables which are identified with large number of categories. This step was performed using the statistical permutation tests on each variable separately. Our assumption is that in a particular variable, a category which belonged to a delayed flights not by chance should be considered individually in our model since it has the potential to indicate on the possibility of delay of future flight related to this category. however, a category that repeats on random iterations with the same or even larger prevalence of delayed flights would be identified with large p-value, and thus considered as not significant category of delayed vs. not delayed flights. The insignificant categories of a variable were combined together into one aggregated category. We applied this step on several variables: 
+In order to optimize our model we decreased the number of categories (levels) in factorial variables which are identified with large number of categories. This step was performed using the statistical permutation tests on each variable separately. Our assumption is that in a particular variable, a category which belonged to a delayed flights not by chance should be considered individually in our model since it has the potential to indicate on the possibility of delay of future flight related to this category. however, a category that repeats on random iterations with the same or even larger prevalence of delayed flights would be identified with large p-value, and thus considered as not significant category of delayed vs. not delayed flights. The insignificant categories of a variable were combined together into one aggregated category. We applied this step on several variables: 
 * "model" variable which included at first 127 categories, and after permutation test has only 13 categories.
 * "manufacturer" variable which had initially 35 categories and finally had 4.
 * "manu_model" included 
@@ -752,9 +757,13 @@ ggplot(balanced_data, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
 Next, split the balanced data to train and test (80/20)
 ```{r}
 train_test_split <- function(balanced_data) {
-  sample = sample.split(balanced_data$dep_delay, SplitRatio = .8)
-  train = subset(balanced_data, sample == TRUE)
-  test  = subset(balanced_data, sample == FALSE)
+  sample_train <-
+    sample(c(TRUE, FALSE),
+           nrow(balanced_data),
+           replace = TRUE,
+           prob = c(0.8, 0.2))
+  train <- balanced_data[sample_train,]
+  test <- balanced_data[!sample_train,]
   train_test <- list(train, test)
   return(train_test)
 }
@@ -785,7 +794,7 @@ run_random <- function(train) {
 rf <- run_random(train)
 rf
 ```
-We can see that the OOB prediction error is very low, which mean the estimated accuracy is high! 
+We can see that the OOB prediction error is very low, which means the estimated accuracy is high! 
 Now, let's predict the test data:
 ```{r}
 pred <- predict(rf, test)
@@ -810,7 +819,7 @@ pred_15 <- predict(rf_15, test_15) #prediction
 confusion_15 <- table(test_15$dep_delay, pred_15$predictions)
 confusion_15
 confusionMatrix(confusion_15)
-
+```
 
 
 ### Random Forest
