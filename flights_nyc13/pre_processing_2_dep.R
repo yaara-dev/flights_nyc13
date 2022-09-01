@@ -79,7 +79,7 @@ flights_full <-
                             week(time_hour) - week(min(time_hour)))
 
 # convert wind direction from degrees to 16 compass directions
-directions <- read.csv('wind_directions.csv')
+directions <- read.csv('../output/wind_directions.csv')
 
 flights_full <- flights_full %>%
   mutate(wind_dir = cut(
