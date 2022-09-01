@@ -1,5 +1,5 @@
 ---
-title: "Big Data Project -\n Prediction of departure delay flights"
+title: "Big Data Project -\n Prediction of flight departure delays"
 author: "Yaara Diamant Karasik & Tal Goldberg"
 date: "2022-08-31"
 output: html_document
@@ -10,7 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Introduction
-Flight delays are a significant societal problem as they impair airlines, transport companies, air traffic controllers, facility managers, and passengers. Studying flight data is an essential activity for every player involved in the air transportation system. Given the uncertainty of delays, passengers usually plan to travel many hours earlier for their appointments. They might have to increase their travel costs to arrive on time. Airlines suffer penalties, fines, and additional operation costs, such as crew and aircraft retention in airports  
+Flight delays are a significant societal problem as they impair airlines, transport companies, air traffic controllers, facility managers, and passengers. Studying flight data is an essential activity for every player involved in the air transportation system. Given the uncertainty of delays, passengers usually plan to travel many hours earlier for their appointments. They might have to increase their travel costs to arrive on time. Airlines suffer penalties, fines, and additional operation costs, such as crew and aircraft retention in airports.
+
 
 ```{r cars}
 summary(cars)
@@ -18,7 +19,7 @@ summary(cars)
 
 ## Research Aim
 Our goal is to generate a prediction model of departure delay time.  
-Reliable prediction will bennefit airports and airlines as well as paaengers. Airports can improve preparation and resource allocations in advance. Airlines are charged extra by airports for flight delays, and 
+A reliable prediction will benefit airports and airlines as well as passengers. Airports can improve preparation and resource allocations in advance. Airlines are charged extra by airports for flight delays, and 
 
 
 You can also embed plots, for example:
@@ -32,9 +33,41 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 
 ## Data
 
-Our analysis is based on public flights dataset taken from "nycflights13" R package.This package contains information about all flights that departed from NYC at 2013. We used additional datasets from this package which provide extensive information about the flights. Thus we merged the 'planes' dataset which containes a construction information about each plane, by 'tailnum' variable column. 
+Our analysis is based on a public flights dataset taken from "nycflights13" R package. This package contains information about all flights that departed from NYC in 2013. We used additional datasets from this package which provide extensive information about the flights. Thus we merged the 'planes' dataset which contains construction information about each plane, by 'tailnum' variable column. 
 
-
+###Load packages:
+```{r}
+list.of.packages <-
+  c(
+    "dataPreparation",
+    "nycflights13",
+    "dplyr",
+    "tidyverse",
+    "RColorBrewer",
+    "ggplot2",
+    "lubridate",
+    "ROSE",
+    "ranger",
+    "gridExtra"
+  )
+new.packages <-
+  list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
+if (length(new.packages)) {
+  install.packages(new.packages)
+}
+```
+```{r}
+library(dataPreparation)
+library(nycflights13)
+library(dplyr)
+library(tidyverse)
+library(RColorBrewer)
+library(ggplot2)
+library(lubridate)
+library(ranger)
+library(ROSE)
+library(caret) 
+```
 ## Exploratory data analysis (EDA)
 
 
@@ -44,4 +77,208 @@ Our analysis is based on public flights dataset taken from "nycflights13" R pack
 
 
 
+ 
+### Random Forest
+The decision tree algorithm is relatively easy to understand and interpret. However, a single tree seems insufficient for producing effective results. 
+We chose to run a Random Forest algorithm as it leverages the power of multiple decision trees. It does not rely on the feature importance given by a single decision tree but chooses features randomly during the training process. Therefore, the random forest can generalize the data in a better way. This randomized feature selection makes Random Forest much more accurate than a decision tree.
+
+First, there is a need to balance the dataset because the amount of delays is ~20% 
+```{r echo=FALSE}
+
+ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
+                                                                             c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
+  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+```
+```{r}
+get_balanced_df <- function(flights_full_arranged) {
+  balanced.data <-
+    ovun.sample(
+      dep_delay ~ .,
+      flights_full_arranged,
+      method = "both",
+      p = 0.5,
+      seed = 1996
+    )$data
+  return(balanced.data)
+}
+
+```
+```{r}
+balanced_data <- get_balanced_df(flights_full_arranged)
+```
+```{r echo=FALSE}
+#plot flights counts per 2 dep_delay categories
+ggplot(balanced_data, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
+                                                                             c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
+  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+```
+Next, split the balanced data to train and test (80/20)
+```{r}
+train_test_split <- function(balanced_data) {
+  sample = sample.split(balanced_data$dep_delay, SplitRatio = .8)
+  train = subset(balanced_data, sample == TRUE)
+  test  = subset(balanced_data, sample == FALSE)
+  train_test <- list(train, test)
+  return(train_test)
+}
+
+```
+```{r}
+train <- train_test_split(balanced_data)[[1]]
+test <- train_test_split(balanced_data)[[2]]
+dim(train)
+dim(test)
+```
+Run Random Forest on the train set
+```{r}
+run_random <- function(train) {
+  fit <- ranger(
+    dep_delay ~ .,
+    data = train,
+    num.trees = 1000,
+    importance = 'impurity',
+    verbose = TRUE,
+    
+  )
+  return(fit)
+}
+```
+
+```{r}
+rf <- run_random(train)
+rf
+```
+We can see that the OOB prediction error is very low, which means the estimated accuracy is high! 
+
+#### Random Forest Prediction
+Now, let's predict the test data:
+```{r}
+pred <- predict(rf, test)
+confusion <- table(test$dep_delay, pred$predictions)
+
+confusionMatrix(confusion)
+```
+As we can see we have high accuracy for predicting delay!
+
+Earlier on we chose 20 minutes as a threshold to determine if a flight is considered delayed.
+We generated two additional datasets: one with a higher threshold (25 minutes) and one with a lower threshold (15 minutes) in order to test the sensitivity of our predictions
+
+Let's run our model on these datasets:
+```{r}
+##sensitivity check
+#threshold = 15
+balanced_data_15 <- get_balanced_df(flights_full_arranged_15) #balance the data
+train_15 <- train_test_split(balanced_data_15)[[1]] #divide to train and test
+test_15 <- train_test_split(balanced_data_15)[[2]]
+rf_15 <- run_random(train_15) #run random forest
+rf_15
+pred_15 <- predict(rf_15, test_15) #prediction
+confusion_15 <- table(test_15$dep_delay, pred_15$predictions)
+confusion_15
+confusionMatrix(confusion_15)
+
+
+#threshold = 25
+balanced_data_25 <- get_balanced_df(flights_full_arranged_25) #balance the data
+train_25 <- train_test_split(balanced_data_25)[[1]] #divide to train and test
+test_25 <- train_test_split(balanced_data_25)[[2]]
+rf_25 <- run_random(train_25) #run random forest
+rf_25
+pred_25 <- predict(rf_25, test_25) #prediction
+confusion_25 <- table(test_25$dep_delay, pred_25$predictions)
+confusion_25
+confusionMatrix(confusion_25)
+```
+Here is a visualization of the confusion matrices:
+```{r echo=FALSE}
+
+par(mfrow = c(1, 3))
+# plot confusion matrix
+plot(
+  confusion,
+  xlab = 'Predicted',
+  ylab = 'True',
+  main = sprintf(
+    'Predicted vs Obsvered
+ OOB prediction error: %s',
+    round(rf$prediction.error, 3)
+  )
+)
+
+plot(
+  confusion_15,
+  xlab = 'Predicted',
+  ylab = 'True',
+  main = sprintf(
+    'Predicted vs Obsvered, sensitivy check(15)
+ OOB prediction error: %s',
+    round(rf_15$prediction.error, 3)
+  )
+)
+
+plot(
+  confusion_25,
+  xlab = 'Predicted',
+  ylab = 'True',
+  main = sprintf(
+    'Predicted vs Obsvered, sensitivy check(25)
+ OOB prediction error: %s',
+    round(rf_15$prediction.error, 3)
+  )
+)
+
+
+```
+Lastly, we would like to know the importance of each predictor:
+```{r}
+get_importance <- function(rf) {
+  imps <- data.frame(
+    var = names(train)[-5],
+    imps = rf$variable.importance / max(rf$variable.importance)
+  )
+  return(imps)
+}
+```
+```{r}
+imps <- get_importance(rf)
+imps_15 <- get_importance(rf_15)
+imps_25 <- get_importance(rf_25)
+```
+
+```{r echo=FALSE}
+p1 <- imps %>%
+  ggplot(aes(imps, x = reorder(var, imps))) +
+  geom_point(size = 3, colour = "#ff6767") +
+  coord_flip() +
+  labs(x = "Predictors", y = "Importance scores") +
+  ggtitle('Importance') +
+  theme_bw(18)
+p1
+
+p2 <- imps_15 %>%
+  ggplot(aes(imps, x = reorder(var, imps))) +
+  geom_point(size = 3, colour = "#ff6767") +
+  coord_flip() +
+  labs(x = "Predictors", y = "Importance scores") +
+  ggtitle('Importance: sensitivity(15)') +
+  theme_bw(18)
+
+
+p3 <- imps_25 %>%
+  ggplot(aes(imps, x = reorder(var, imps))) +
+  geom_point(size = 3, colour = "#ff6767") +
+  coord_flip() +
+  labs(x = "Predictors", y = "Importance scores") +
+  ggtitle('Importance: sensitivity(25)') +
+  theme_bw(18)
+
+
+
+
+grid.arrange(p2, p3, ncol = 2)
+```
+#prediction
 ## Conclusion
