@@ -1,6 +1,6 @@
 ---
 title: "Big Data Project -\n Prediction of departure delay flights"
-author: "Yaara Diamant & Tal Goldberg"
+author: "Yaara Diamant Karasik & Tal Goldberg"
 date: "2022-08-31"
 output: html_document
 ---
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Introduction
-
+Flight delays are a significant societal problem as they impair airlines, transport companies, air traffic controllers, facility managers, and passengers. Studying flight data is an essential activity for every player involved in the air transportation system. Given the uncertainty of delays, passengers usually plan to travel many hours earlier for their appointments. They might have to increase their travel costs to arrive on time. Airlines suffer penalties, fines, and additional operation costs, such as crew and aircraft retention in airports  
 
 ```{r cars}
 summary(cars)
