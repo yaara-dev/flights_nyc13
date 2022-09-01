@@ -75,8 +75,142 @@ library(caret)
 
 ## Inference
 
+Load packages:
+```{r}
+list.of.packages <-
+  c(
+    "dataPreparation",
+    "nycflights13",
+    "dplyr",
+    "tidyverse",
+    "RColorBrewer",
+    "ggplot2",
+    "lubridate",
+    "ROSE",
+    "ranger",
+    "gridExtra"
+  )
+new.packages <-
+  list.of.packages[!(list.of.packages %in% installed.packages()[, "Package"])]
+if (length(new.packages)) {
+  install.packages(new.packages)
+}
+```
+```{r}
+library(dataPreparation)
+library(nycflights13)
+library(dplyr)
+library(tidyverse)
+library(RColorBrewer)
+library(ggplot2)
+library(lubridate)
+library(ranger)
+library(ROSE)
+library(caret) 
+```
+
+ 
+### Random Forest
+The decision tree algorithm is relatively easy to understand and interpret. However, a single tree seems insufficient for producing effective results. 
+We chose to run a Random Forest algorithm as it leverages the power of multiple decision trees. It does not rely on the feature importance given by a single decision tree but chooses features randomly during the training process. Therefore, the random forest can generalize the data in a better way. This randomized feature selection makes Random Forest much more accurate than a decision tree.
+
+First, there is a need to balance the dataset because the amount of delays is ~20% 
+```{r echo=FALSE}
+
+ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
+                                                                             c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
+  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+```
+```{r}
+get_balanced_df <- function(flights_full_arranged) {
+  balanced.data <-
+    ovun.sample(
+      dep_delay ~ .,
+      flights_full_arranged,
+      method = "both",
+      p = 0.5,
+      seed = 1996
+    )$data
+  return(balanced.data)
+}
+
+```
+```{r}
+balanced_data <- get_balanced_df(flights_full_arranged)
+```
+```{r echo=FALSE}
+#plot flights counts per 2 dep_delay categories
+ggplot(balanced_data, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
+                                                                             c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
+  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+```
+Next, split the balanced data to train and test (80/20)
+```{r}
+train_test_split <- function(balanced_data) {
+  sample = sample.split(balanced_data$dep_delay, SplitRatio = .8)
+  train = subset(balanced_data, sample == TRUE)
+  test  = subset(balanced_data, sample == FALSE)
+  train_test <- list(train, test)
+  return(train_test)
+}
+
+```
+```{r}
+train <- train_test_split(balanced_data)[[1]]
+test <- train_test_split(balanced_data)[[2]]
+dim(train)
+dim(test)
+```
+Run Random Forest on the train set
+```{r}
+run_random <- function(train) {
+  fit <- ranger(
+    dep_delay ~ .,
+    data = train,
+    num.trees = 1000,
+    importance = 'impurity',
+    verbose = TRUE,
+    
+  )
+  return(fit)
+}
+```
+
+```{r}
+rf <- run_random(train)
+rf
+```
+We can see that the OOB prediction error is very low, which mean the estimated accuracy is high! 
+Now, let's predict the test data:
+```{r}
+pred <- predict(rf, test)
+confusion <- table(test$dep_delay, pred$predictions)
+
+confusionMatrix(confusion)
+```
+As we can see we have high accuracy for predicting delay!
+
+Earlier on we chose 20 minutes as a threshold to determine if a flight is considered delay. We generated two additional datasets: one with a higher threshold (25 minutes) and one with a lower threshold (15 minutes) in order to test the sensitivity of our predictions
+
+Let's run our model on these datasets:
+```{r}
+##sensitivity check
+#threshold = 15
+balanced_data_15 <- get_balanced_df(flights_full_arranged_15) #balance the data
+train_15 <- train_test_split(balanced_data_15)[[1]] #divide to train and test
+test_15 <- train_test_split(balanced_data_15)[[2]]
+rf_15 <- run_random(train_15) #run random forest
+rf_15
+pred_15 <- predict(rf_15, test_15) #prediction
+confusion_15 <- table(test_15$dep_delay, pred_15$predictions)
+confusion_15
+confusionMatrix(confusion_15)
 
 
+<<<<<<< HEAD
  
 ### Random Forest
 The decision tree algorithm is relatively easy to understand and interpret. However, a single tree seems insufficient for producing effective results. 
@@ -181,6 +315,8 @@ confusion_15
 confusionMatrix(confusion_15)
 
 
+=======
+>>>>>>> 0bc0629715c03107def8b6813802d4a55750f7f2
 #threshold = 25
 balanced_data_25 <- get_balanced_df(flights_full_arranged_25) #balance the data
 train_25 <- train_test_split(balanced_data_25)[[1]] #divide to train and test
@@ -278,7 +414,11 @@ p3 <- imps_25 %>%
 
 
 
+<<<<<<< HEAD
 grid.arrange(p2, p3, ncol = 2)
+=======
+grid.arrange(p1, p2, p3, ncol = 2)
+>>>>>>> 0bc0629715c03107def8b6813802d4a55750f7f2
 ```
 #prediction
 ## Conclusion
