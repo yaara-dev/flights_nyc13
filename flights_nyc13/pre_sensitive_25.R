@@ -5,19 +5,25 @@
 #display all flights_full
 str(flights_full)
 
+#new data frame for sensitivity check, threshold = 25
+flights_full_25 <- flights_full
+
 #divide the flights into 2 groups according to their dep_delay - flights above 25 min delay, and flights above -10 & until 25 min delay
 
-flights_full_new_dep_delay <- flights_full[which(flights_full$dep_delay>-10),]
-flights_full_arranged <- flights_full_new_dep_delay %>% arrange(dep_delay)
+flights_full_new_dep_delay_25 <-
+  flights_full_25[which(flights_full_25$dep_delay > -10), ]
+flights_full_arranged_25 <-
+  flights_full_new_dep_delay_25 %>% arrange(dep_delay)
+
 
 # plot histogram of original dep_delay before changing it into 2 categories with the threshold
-ggplot(flights_full_arranged, aes(x = dep_delay)) +
+ggplot(flights_full_arranged_25, aes(x = dep_delay)) +
   geom_histogram(color = "black", fill = "white", bins = 40) +
-  geom_vline(aes(xintercept = 25, color = "delay > 20 min"),
+  geom_vline(aes(xintercept = 25, color = "delay > 25 min"),
              linetype = "dashed",
              size = 1.3) +
   
-  scale_color_manual(name = "Treshold delay time", values = c("delay > 20 min" = "red")) +
+  scale_color_manual(name = "Treshold delay time", values = c("delay > 25 min" = "red")) +
   
   labs(
     x = "Departure delay time [min]",
@@ -27,277 +33,514 @@ ggplot(flights_full_arranged, aes(x = dep_delay)) +
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
 
 # percentage of dep_delay=0
-(length(which(flights_full_arranged$dep_delay<(25))))/nrow(flights_full_arranged) 
+(length(which(
+  flights_full_arranged_25$dep_delay < (25)
+))) / nrow(flights_full_arranged_25)
 # percentage of dep_delay=1
-(length(which(flights_full_arranged$dep_delay>=(25))))/nrow(flights_full_arranged)
+(length(which(
+  flights_full_arranged_25$dep_delay >= (25)
+))) / nrow(flights_full_arranged_25)
 
 #change dep_delay column into categories (0 / 1)
-flights_full_arranged <-
+flights_full_arranged_25 <-
   
-  flights_full_arranged %>% mutate(
-    dep_delay = case_when(
-      dep_delay < 25 ~ 0,
-      dep_delay >= 25 ~1
-    )
-  )
+  flights_full_arranged_25 %>% mutate(dep_delay = case_when(dep_delay < 25 ~ 0,
+                                                            dep_delay >= 25 ~ 1))
 
 
 #convert dep_delay to factor column
-flights_full_arranged$dep_delay <-
-  as.factor(flights_full_arranged$dep_delay)
+flights_full_arranged_25$dep_delay <-
+  as.factor(flights_full_arranged_25$dep_delay)
 
 
 #plot flights counts per 2 dep_delay categories
-ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
-                                                                             c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
+ggplot(flights_full_arranged_25, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
+                                                                                c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
   labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 
 # merge manufacturer and model columns into one column
 manu_model <-
-  paste(flights_full_arranged$manufacturer,
-        flights_full_arranged$model,
+  paste(flights_full_arranged_25$manufacturer,
+        flights_full_arranged_25$model,
         sep = "_")
-flights_full_arranged$manu_model <- manu_model
+flights_full_arranged_25$manu_model <- manu_model
 
 
-# permutation function - skip it because it is already done 
-levels_model<-levels(factor(flights_full_arranged$model)) #levels of model
-levels_manufacturer<-levels(factor(flights_full_arranged$manufacturer)) #levels of manufacturer
-levels_manu_model <- levels(factor(flights_full_arranged$manu_model)) #levels of manu_model
-levels_dest<-levels(factor(flights_full_arranged$dest)) #levels of destinations
-levels_seats<-levels(factor(flights_full_arranged$seats)) #levels of seats
+# permutation function - skip it because it is already done
+levels_model <-
+  levels(factor(flights_full_arranged_25$model)) #levels of model
+levels_manufacturer <-
+  levels(factor(flights_full_arranged_25$manufacturer)) #levels of manufacturer
+levels_manu_model <-
+  levels(factor(flights_full_arranged_25$manu_model)) #levels of manu_model
+levels_dest <-
+  levels(factor(flights_full_arranged_25$dest)) #levels of destinations
+levels_seats <-
+  levels(factor(flights_full_arranged_25$seats)) #levels of seats
 
-# origin_num_delay_var<-function(var_name,levels_var) {
-#   origin_delay_vec<-sapply(levels_var, simplify = TRUE, FUN=function(one_level){
-#     df_summarize<-flights_full_arranged %>% filter((!! sym(var_name))==one_level) %>% group_by(dep_delay, .drop=FALSE) %>% tally
-#     number_delay_in_level<-df_summarize$n[df_summarize$dep_delay==1]
-#     number_delay_in_level
-#   })
-#   origin_delay_vec
-# }
-# 
-# origin_num_delay_model<-origin_num_delay_var('model',levels_model)
-# origin_num_delay_manufacturer<-origin_num_delay_var('manufacturer',levels_manufacturer)
-# origin_num_delay_manu_model<-origin_num_delay_var('manu_model',levels_manu_model)
-# origin_num_delay_dest<-origin_num_delay_var('dest',levels_dest)
-# origin_num_delay_seats<-origin_num_delay_var('seats',levels_seats)
-# 
-# 
-# perm_vec_var<-function(levels_var_model, origin_num_delay_var){
-#   perm_vec<-rep(1, length(levels_var_model))
-#   perm_vec<-setNames(perm_vec, names(origin_num_delay_var))
-# }
-# 
-# perm_ndelay_vec_model<-perm_vec_var(levels_model, origin_num_delay_model)
-# perm_ndelay_vec_manufacturer<-perm_vec_var(levels_manufacturer, origin_num_delay_manufacturer)
-# perm_ndelay_vec_manu_model<-perm_vec_var(levels_manu_model, origin_num_delay_manu_model)
-# perm_ndelay_vec_dest<-perm_vec_var(levels_dest, origin_num_delay_dest)
-# perm_ndelay_vec_seats<-perm_vec_var(levels_seats, origin_num_delay_seats)
-# 
-# create_perm_ndelay_vec_var<-function(flights_full_perm, var_name,levels_var, origin_num_delay_var, perm_vec_var) {
-#   perm_num_delay_var <- sapply(levels_var, simplify = TRUE, FUN=function(one_level){
-#     df_summarize<-flights_full_perm %>% filter((!! sym(var_name))==one_level) %>% group_by(dep_delay, .drop=FALSE) %>% tally
-#     number_delay_in_level<-df_summarize$n[df_summarize$dep_delay==1]
-#     number_delay_in_level
-#   })
-#   ind_greater<-which(perm_num_delay_var>=origin_num_delay_var)
-#   perm_vec_var[ind_greater]<-perm_vec_var[ind_greater]+1
-#   perm_vec_var
-# }
-# 
-# num_perm<-500
-# for (iter in 1:num_perm){
-#   print(iter)
-#   flights_full_perm<-transform(flights_full_arranged, dep_delay = sample(dep_delay))
-#   perm_ndelay_vec_model<-create_perm_ndelay_vec_var(flights_full_perm, 'model', levels_model, origin_num_delay_model, perm_ndelay_vec_model)
-#   perm_ndelay_vec_manufacturer<-create_perm_ndelay_vec_var(flights_full_perm, 'manufacturer', levels_manufacturer, origin_num_delay_manufacturer, perm_ndelay_vec_manufacturer)
-#   perm_ndelay_vec_manu_model<-create_perm_ndelay_vec_var(flights_full_perm, 'manu_model', levels_manu_model, origin_num_delay_manu_model, perm_ndelay_vec_manu_model)
-#   perm_ndelay_vec_dest<-create_perm_ndelay_vec_var(flights_full_perm, 'dest', levels_dest, origin_num_delay_dest, perm_ndelay_vec_dest)
-#   perm_ndelay_vec_seats<-create_perm_ndelay_vec_var(flights_full_perm, 'seats', levels_seats, origin_num_delay_seats, perm_ndelay_vec_seats)
-# }
-# 
-# #save perm_ndelay_vec_var output from permutations to csv (as tibble data frmae)
-# perm_ndelay_vec_model_df = tibble(name = names(perm_ndelay_vec_model), value = perm_ndelay_vec_model)
-# write.table(perm_ndelay_vec_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_model_df_25_1.csv",  sep=",",  row.names=FALSE)
-# perm_ndelay_vec_manufacturer_df = tibble(name = names(perm_ndelay_vec_manufacturer), value = perm_ndelay_vec_manufacturer)
-# write.table(perm_ndelay_vec_manufacturer_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manufacturer_df_25_1.csv",  sep=",",  row.names=FALSE)
-# perm_ndelay_vec_manu_model_df = tibble(name = names(perm_ndelay_vec_manu_model), value = perm_ndelay_vec_manu_model)
-# write.table(perm_ndelay_vec_manu_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manu_model_df_25_1.csv",  sep=",",  row.names=FALSE)
-# perm_ndelay_vec_dest_df = tibble(name = names(perm_ndelay_vec_dest), value = perm_ndelay_vec_dest)
-# write.table(perm_ndelay_vec_dest_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_dest_df_25_1.csv",  sep=",",  row.names=FALSE)
-# perm_ndelay_vec_seats_df = tibble(name = names(perm_ndelay_vec_seats), value = perm_ndelay_vec_seats)
-# write.table(perm_ndelay_vec_seats_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_seats_df_25_1.csv",  sep=",",  row.names=FALSE)
-
-# #merge all df from permutation test to 1 summed df for each variable
-# merge_df<-function(var_name) {
-#   # before merging all dfs observed from multiple observations
-#   perm_ndelay_var_df_1 <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_",var_name,"_df_25_1.csv", sep=""),  sep=",", header=TRUE)
-#   perm_ndelay_var_df_2 <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_",var_name,"_df_25_2.csv", sep=""),  sep=",", header=TRUE)
-#   perm_ndelay_var_df_1$value <- perm_ndelay_var_df_1$value + perm_ndelay_var_df_2$value -1
-#   write.table(perm_ndelay_var_df_1 , file = paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_merged_vec_", var_name,"_df_25.csv", sep=""),  sep=",",  row.names=FALSE)
-#   perm_ndelay_var_df_1
-# }
-# model_df_merged<-merge_df("model")
-# manu_df_merged<-merge_df("manufacturer")
-# manu_model_df_merged<-merge_df("manu_model") 
-# dest_df_merged<-merge_df("dest") 
-# seats_df_merged<-merge_df("seats") 
+run_permutations = FALSE
+if (run_permutations) {
+  origin_num_delay_var <- function(var_name, levels_var) {
+    origin_delay_vec <-
+      sapply(
+        levels_var,
+        simplify = TRUE,
+        FUN = function(one_level) {
+          df_summarize <-
+            flights_full_arranged_25 %>% filter((!!sym(var_name)) == one_level) %>% group_by(dep_delay, .drop =
+                                                                                               FALSE) %>% tally
+          number_delay_in_level <-
+            df_summarize$n[df_summarize$dep_delay == 1]
+          number_delay_in_level
+        }
+      )
+    origin_delay_vec
+  }
+  
+  origin_num_delay_model <-
+    origin_num_delay_var('model', levels_model)
+  origin_num_delay_manufacturer <-
+    origin_num_delay_var('manufacturer', levels_manufacturer)
+  origin_num_delay_manu_model <-
+    origin_num_delay_var('manu_model', levels_manu_model)
+  origin_num_delay_dest <- origin_num_delay_var('dest', levels_dest)
+  origin_num_delay_seats <-
+    origin_num_delay_var('seats', levels_seats)
+  
+  
+  perm_vec_var <- function(levels_var_model,
+                           origin_num_delay_var) {
+    perm_vec <- rep(1, length(levels_var_model))
+    perm_vec <- setNames(perm_vec, names(origin_num_delay_var))
+  }
+  
+  perm_ndelay_vec_model <-
+    perm_vec_var(levels_model, origin_num_delay_model)
+  perm_ndelay_vec_manufacturer <-
+    perm_vec_var(levels_manufacturer, origin_num_delay_manufacturer)
+  perm_ndelay_vec_manu_model <-
+    perm_vec_var(levels_manu_model, origin_num_delay_manu_model)
+  perm_ndelay_vec_dest <-
+    perm_vec_var(levels_dest, origin_num_delay_dest)
+  perm_ndelay_vec_seats <-
+    perm_vec_var(levels_seats, origin_num_delay_seats)
+  
+  create_perm_ndelay_vec_var <-
+    function(flights_full_perm,
+             var_name,
+             levels_var,
+             origin_num_delay_var,
+             perm_vec_var) {
+      perm_num_delay_var <-
+        sapply(
+          levels_var,
+          simplify = TRUE,
+          FUN = function(one_level) {
+            df_summarize <-
+              flights_full_perm %>% filter((!!sym(var_name)) == one_level) %>% group_by(dep_delay, .drop =
+                                                                                          FALSE) %>% tally
+            number_delay_in_level <-
+              df_summarize$n[df_summarize$dep_delay == 1]
+            number_delay_in_level
+          }
+        )
+      ind_greater <- which(perm_num_delay_var >= origin_num_delay_var)
+      perm_vec_var[ind_greater] <- perm_vec_var[ind_greater] + 1
+      perm_vec_var
+    }
+  
+  num_perm <- 500
+  for (iter in 1:num_perm) {
+    print(iter)
+    flights_full_perm <-
+      transform(flights_full_arranged_25, dep_delay = sample(dep_delay))
+    perm_ndelay_vec_model <-
+      create_perm_ndelay_vec_var(
+        flights_full_perm,
+        'model',
+        levels_model,
+        origin_num_delay_model,
+        perm_ndelay_vec_model
+      )
+    perm_ndelay_vec_manufacturer <-
+      create_perm_ndelay_vec_var(
+        flights_full_perm,
+        'manufacturer',
+        levels_manufacturer,
+        origin_num_delay_manufacturer,
+        perm_ndelay_vec_manufacturer
+      )
+    perm_ndelay_vec_manu_model <-
+      create_perm_ndelay_vec_var(
+        flights_full_perm,
+        'manu_model',
+        levels_manu_model,
+        origin_num_delay_manu_model,
+        perm_ndelay_vec_manu_model
+      )
+    perm_ndelay_vec_dest <-
+      create_perm_ndelay_vec_var(
+        flights_full_perm,
+        'dest',
+        levels_dest,
+        origin_num_delay_dest,
+        perm_ndelay_vec_dest
+      )
+    perm_ndelay_vec_seats <-
+      create_perm_ndelay_vec_var(
+        flights_full_perm,
+        'seats',
+        levels_seats,
+        origin_num_delay_seats,
+        perm_ndelay_vec_seats
+      )
+  }
+  
+  #save perm_ndelay_vec_var output from permutations to csv (as tibble data frmae)
+  perm_ndelay_vec_model_df = tibble(name = names(perm_ndelay_vec_model), value = perm_ndelay_vec_model)
+  write.table(
+    perm_ndelay_vec_model_df ,
+    file = "../output/perm_ndelay_vec_model_df_25_1.csv",
+    sep = ",",
+    row.names = FALSE
+  )
+  perm_ndelay_vec_manufacturer_df = tibble(name = names(perm_ndelay_vec_manufacturer),
+                                           value = perm_ndelay_vec_manufacturer)
+  write.table(
+    perm_ndelay_vec_manufacturer_df ,
+    file = "../output/perm_ndelay_vec_manufacturer_df_25_1.csv",
+    sep = ",",
+    row.names = FALSE
+  )
+  perm_ndelay_vec_manu_model_df = tibble(name = names(perm_ndelay_vec_manu_model),
+                                         value = perm_ndelay_vec_manu_model)
+  write.table(
+    perm_ndelay_vec_manu_model_df ,
+    file = "../output/perm_ndelay_vec_manu_model_df_25_1.csv",
+    sep = ",",
+    row.names = FALSE
+  )
+  perm_ndelay_vec_dest_df = tibble(name = names(perm_ndelay_vec_dest), value = perm_ndelay_vec_dest)
+  write.table(
+    perm_ndelay_vec_dest_df ,
+    file = "../output/perm_ndelay_vec_dest_df_25_1.csv",
+    sep = ",",
+    row.names = FALSE
+  )
+  perm_ndelay_vec_seats_df = tibble(name = names(perm_ndelay_vec_seats), value = perm_ndelay_vec_seats)
+  write.table(
+    perm_ndelay_vec_seats_df ,
+    file = "../output/perm_ndelay_vec_seats_df_25_1.csv",
+    sep = ",",
+    row.names = FALSE
+  )
+  
+  #merge all df from permutation test to 1 summed df for each variable
+  merge_df <- function(var_name) {
+    # before merging all dfs observed from multiple observations
+    perm_ndelay_var_df_1 <-
+      read.table(
+        file = paste(
+          "../output/perm_ndelay_vec_",
+          var_name,
+          "_df_25_1.csv",
+          sep = ""
+        ),
+        sep = ",",
+        header = TRUE
+      )
+    perm_ndelay_var_df_2 <-
+      read.table(
+        file = paste(
+          "../output/perm_ndelay_vec_",
+          var_name,
+          "_df_25_2.csv",
+          sep = ""
+        ),
+        sep = ",",
+        header = TRUE
+      )
+    perm_ndelay_var_df_1$value <-
+      perm_ndelay_var_df_1$value + perm_ndelay_var_df_2$value - 1
+    write.table(
+      perm_ndelay_var_df_1 ,
+      file = paste(
+        "../output/perm_ndelay_merged_vec_",
+        var_name,
+        "_df_25.csv",
+        sep = ""
+      ),
+      sep = ",",
+      row.names = FALSE
+    )
+    perm_ndelay_var_df_1
+  }
+  model_df_merged <- merge_df("model")
+  manu_df_merged <- merge_df("manufacturer")
+  manu_model_df_merged <- merge_df("manu_model")
+  dest_df_merged <- merge_df("dest")
+  seats_df_merged <- merge_df("seats")
+  
+}
 
 
 #display plots of p-val for each level and flights count for each level
-num_perm<-1000
-perm_result_var_df<-function(var_name) {
-  perm_ndelay_var_df <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_merged_vec_",var_name,"_df_25.csv", sep=""),  sep=",", header=TRUE)
-  colnames(perm_ndelay_var_df)[1]<-var_name
-  perm_ndelay_var_df$p_val<- perm_ndelay_var_df$value/num_perm
-  perm_ndelay_var_df$p_adj<-p.adjust(perm_ndelay_var_df$p_val, method = "BH")
+num_perm <- 1000
+perm_result_var_df <- function(var_name) {
+  perm_ndelay_var_df <-
+    read.table(
+      file = paste(
+        "../output/perm_ndelay_merged_vec_",
+        var_name,
+        "_df_25.csv",
+        sep = ""
+      ),
+      sep = ",",
+      header = TRUE
+    )
+  colnames(perm_ndelay_var_df)[1] <- var_name
+  perm_ndelay_var_df$p_val <- perm_ndelay_var_df$value / num_perm
+  perm_ndelay_var_df$p_adj <-
+    p.adjust(perm_ndelay_var_df$p_val, method = "BH")
   
   flights_counts_var_df <-
-    flights_full_arranged %>% group_by((!! sym(var_name))) %>% summarise(total_counts =
-                                                                           n())
+    flights_full_arranged_25 %>% group_by((!!sym(var_name))) %>% summarise(total_counts =
+                                                                             n())
   perm_ndelay_var_df <-
     merge(perm_ndelay_var_df, flights_counts_var_df, by = var_name) #add flights counts per level
   
-  perm_ndelay_var_df<- perm_ndelay_var_df%>% arrange(p_adj)
+  perm_ndelay_var_df <- perm_ndelay_var_df %>% arrange(p_adj)
   
-  p_val_plot<-ggplot(perm_ndelay_var_df, aes(x = reorder((!! sym(var_name)), p_adj) , y = p_adj)) + geom_bar(stat ="identity") +
-    labs(title = paste("p-value adjusted per", var_name, "level"), x = var_name, y ="p-value adjusted") +
-    theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"),
-          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6)) +
-    geom_hline(aes(yintercept = 0.05, color="0.05"),linetype = "dashed",size = 1.5)+
-    scale_color_manual(name = "FDR cutoff", values =c("0.05"="red"))
+  p_val_plot <-
+    ggplot(perm_ndelay_var_df, aes(x = reorder((!!sym(
+      var_name
+    )), p_adj) , y = p_adj)) + geom_bar(stat = "identity") +
+    labs(
+      title = paste("p-value adjusted per", var_name, "level"),
+      x = var_name,
+      y = "p-value adjusted"
+    ) +
+    theme(
+      plot.title = element_text(
+        hjust = 0.5,
+        size = 19,
+        face = "bold"
+      ),
+      axis.text.x = element_text(
+        angle = 90,
+        vjust = 0.5,
+        hjust = 1,
+        size = 6
+      )
+    ) +
+    geom_hline(aes(yintercept = 0.05, color = "0.05"),
+               linetype = "dashed",
+               size = 1.5) +
+    scale_color_manual(name = "FDR cutoff", values = c("0.05" = "red"))
   
-  flights_counts_plot<-ggplot(perm_ndelay_var_df,  aes(x = reorder((!! sym(var_name)), p_adj) , y = total_counts)) +
-    geom_bar(stat ="identity") + labs(title =paste("flights counts per", var_name, "level"), x = var_name, y ="flights counts") +
-    theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"),
-          axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 6))
+  flights_counts_plot <-
+    ggplot(perm_ndelay_var_df,  aes(x = reorder((!!sym(
+      var_name
+    )), p_adj) , y = total_counts)) +
+    geom_bar(stat = "identity") + labs(
+      title = paste("flights counts per", var_name, "level"),
+      x = var_name,
+      y = "flights counts"
+    ) +
+    theme(
+      plot.title = element_text(
+        hjust = 0.5,
+        size = 19,
+        face = "bold"
+      ),
+      axis.text.x = element_text(
+        angle = 90,
+        vjust = 0.5,
+        hjust = 1,
+        size = 6
+      )
+    )
   
   return(list(perm_ndelay_var_df, p_val_plot, flights_counts_plot))
 }
 
 #permutation - model
-perm_model_df<-perm_result_var_df("model")
-perm_ndelay_model_df<-perm_model_df[[1]]
+perm_model_df <- perm_result_var_df("model")
+perm_ndelay_model_df <- perm_model_df[[1]]
 perm_model_df[[2]]
 perm_model_df[[3]]
 
 
 #permutation - manufacturer
-perm_manufacturer_df<-perm_result_var_df("manufacturer")
-perm_ndelay_manufacturer_df<-perm_manufacturer_df[[1]]
+perm_manufacturer_df <- perm_result_var_df("manufacturer")
+perm_ndelay_manufacturer_df <- perm_manufacturer_df[[1]]
 perm_manufacturer_df[[2]]
 perm_manufacturer_df[[3]]
 
 #permutation - manu_model
-perm_manu_model_df<-perm_result_var_df("manu_model")
-perm_ndelay_manu_model_df<-perm_manu_model_df[[1]]
+perm_manu_model_df <- perm_result_var_df("manu_model")
+perm_ndelay_manu_model_df <- perm_manu_model_df[[1]]
 perm_manu_model_df[[2]]
 perm_manu_model_df[[3]]
 
 #permutation - dest
-perm_dest_df<-perm_result_var_df("dest")
-perm_ndelay_dest_df<-perm_dest_df[[1]]
+perm_dest_df <- perm_result_var_df("dest")
+perm_ndelay_dest_df <- perm_dest_df[[1]]
 perm_dest_df[[2]]
 perm_dest_df[[3]]
 
 #permutation - seats
-perm_seats_df<-perm_result_var_df("seats")
-perm_ndelay_seats_df<-perm_seats_df[[1]]
+perm_seats_df <- perm_result_var_df("seats")
+perm_ndelay_seats_df <- perm_seats_df[[1]]
 perm_seats_df[[2]]
 perm_seats_df[[3]]
 
-#change model levels in flights_full_arranged
-flights_full_arranged$model<-as.character(flights_full_arranged$model)
-models_to_change<-perm_ndelay_model_df$model[which(perm_ndelay_model_df$p_adj<=0.05)] #filtered levels (were kept)
+#change model levels in flights_full_arranged_25
+flights_full_arranged_25$model <-
+  as.character(flights_full_arranged_25$model)
+models_to_change <-
+  perm_ndelay_model_df$model[which(perm_ndelay_model_df$p_adj <= 0.05)] #filtered levels (were kept)
 models_to_change
-flights_full_arranged <-
-  flights_full_arranged %>% mutate(model = replace(model, !(flights_full_arranged$model %in% models_to_change), 'other_model'))
+flights_full_arranged_25 <-
+  flights_full_arranged_25 %>% mutate(model = replace(
+    model,
+    !(flights_full_arranged_25$model %in% models_to_change),
+    'other_model'
+  ))
 
-flights_full_arranged$model<-as.factor(flights_full_arranged$model) #convert back to factor variable
-levels(flights_full_arranged$model)
+flights_full_arranged_25$model <-
+  as.factor(flights_full_arranged_25$model) #convert back to factor variable
+levels(flights_full_arranged_25$model)
 
 #change model levels into  one-letter categories
-flights_full_arranged_bf_change<-flights_full_arranged
-model_levels_after_change<-data.frame(model=levels(flights_full_arranged$model))
-model_levels_after_change$new_name<-letters[1:nrow(model_levels_after_change)]
-model_levels_after_change$new_name[model_levels_after_change$model=="other_model"]<- "other"
-model_letter_cat<-lapply(flights_full_arranged$model, function(row){
-  y<- model_levels_after_change$new_name[which(row==model_levels_after_change$model)]
-  y
-})
-flights_full_arranged$model<-as.factor(unlist(model_letter_cat))
-levels(flights_full_arranged$model)
+flights_full_arranged_25_bf_change <- flights_full_arranged_25
+model_levels_after_change <-
+  data.frame(model = levels(flights_full_arranged_25$model))
+model_levels_after_change$new_name <-
+  letters[1:nrow(model_levels_after_change)]
+model_levels_after_change$new_name[model_levels_after_change$model == "other_model"] <-
+  "other"
+model_letter_cat <-
+  lapply(flights_full_arranged_25$model, function(row) {
+    y <-
+      model_levels_after_change$new_name[which(row == model_levels_after_change$model)]
+    y
+  })
+flights_full_arranged_25$model <- as.factor(unlist(model_letter_cat))
+levels(flights_full_arranged_25$model)
 
 
-#change manufacturer levels in flights_full_arranged
-flights_full_arranged$manufacturer<-as.character(flights_full_arranged$manufacturer)
-manufacturers_to_change<-perm_ndelay_manufacturer_df$manufacturer[which(perm_ndelay_manufacturer_df$p_adj<=0.05)] #filtered levels (were kept)
+#change manufacturer levels in flights_full_arranged_25
+flights_full_arranged_25$manufacturer <-
+  as.character(flights_full_arranged_25$manufacturer)
+manufacturers_to_change <-
+  perm_ndelay_manufacturer_df$manufacturer[which(perm_ndelay_manufacturer_df$p_adj <=
+                                                   0.05)] #filtered levels (were kept)
 manufacturers_to_change
-flights_full_arranged <-
-  flights_full_arranged %>% mutate(manufacturer = replace(manufacturer, !(flights_full_arranged$manufacturer %in% manufacturers_to_change), 'other_manufacturer'))
+flights_full_arranged_25 <-
+  flights_full_arranged_25 %>% mutate(manufacturer = replace(
+    manufacturer,
+    !(
+      flights_full_arranged_25$manufacturer %in% manufacturers_to_change
+    ),
+    'other_manufacturer'
+  ))
 
-flights_full_arranged$manufacturer<-as.factor(flights_full_arranged$manufacturer) #convert back to factor variable
-levels(flights_full_arranged$manufacturer)
+flights_full_arranged_25$manufacturer <-
+  as.factor(flights_full_arranged_25$manufacturer) #convert back to factor variable
+levels(flights_full_arranged_25$manufacturer)
 
-#change manu_model levels in flights_full_arranged
-flights_full_arranged$manu_model<-as.character(flights_full_arranged$manu_model)
-manu_models_to_change<-perm_ndelay_manu_model_df$manu_model[which(perm_ndelay_manu_model_df$p_adj<=0.05)] #filtered levels (were kept)
+#change manu_model levels in flights_full_arranged_25
+flights_full_arranged_25$manu_model <-
+  as.character(flights_full_arranged_25$manu_model)
+manu_models_to_change <-
+  perm_ndelay_manu_model_df$manu_model[which(perm_ndelay_manu_model_df$p_adj <=
+                                               0.05)] #filtered levels (were kept)
 manu_models_to_change
-flights_full_arranged <-
+flights_full_arranged_25 <-
   
-  flights_full_arranged %>% mutate(manu_model = replace(manu_model, !(flights_full_arranged$manu_model %in% manu_models_to_change), 'other_manu_model'))
+  flights_full_arranged_25 %>% mutate(manu_model = replace(
+    manu_model,
+    !(
+      flights_full_arranged_25$manu_model %in% manu_models_to_change
+    ),
+    'other_manu_model'
+  ))
 
-flights_full_arranged$manu_model<-as.factor(flights_full_arranged$manu_model) #convert back to factor variable
-levels(flights_full_arranged$manu_model)
+flights_full_arranged_25$manu_model <-
+  as.factor(flights_full_arranged_25$manu_model) #convert back to factor variable
+levels(flights_full_arranged_25$manu_model)
 
 #change manu_model column into  one-letter categories
-flights_full_arranged_bf_change<-flights_full_arranged
-manu_model_levels_after_change<-data.frame(manu_model=levels(flights_full_arranged$manu_model))
-manu_model_levels_after_change$new_name<-letters[1:nrow(manu_model_levels_after_change)]
-manu_model_levels_after_change$new_name[manu_model_levels_after_change$manu_model=="other_manu_model"]<- "other"
-manu_model_letter_cat<-lapply(flights_full_arranged$manu_model, function(row){
-  y<-manu_model_levels_after_change$new_name[which(row==manu_model_levels_after_change$manu_model)]
-  y
-})
-flights_full_arranged$manu_model<-as.factor(unlist(manu_model_letter_cat))
-levels(flights_full_arranged$manu_model)
+flights_full_arranged_25_bf_change <- flights_full_arranged_25
+manu_model_levels_after_change <-
+  data.frame(manu_model = levels(flights_full_arranged_25$manu_model))
+manu_model_levels_after_change$new_name <-
+  letters[1:nrow(manu_model_levels_after_change)]
+manu_model_levels_after_change$new_name[manu_model_levels_after_change$manu_model ==
+                                          "other_manu_model"] <- "other"
+manu_model_letter_cat <-
+  lapply(flights_full_arranged_25$manu_model, function(row) {
+    y <-
+      manu_model_levels_after_change$new_name[which(row == manu_model_levels_after_change$manu_model)]
+    y
+  })
+flights_full_arranged_25$manu_model <-
+  as.factor(unlist(manu_model_letter_cat))
+levels(flights_full_arranged_25$manu_model)
 
-#change destination levels in flights_full_arranged
-flights_full_arranged$dest<-as.character(flights_full_arranged$dest)
-dests_to_change<-perm_ndelay_dest_df$dest[which(perm_ndelay_dest_df$p_adj<=0.05)] #filtered levels (were kept)
+#change destination levels in flights_full_arranged_25
+flights_full_arranged_25$dest <-
+  as.character(flights_full_arranged_25$dest)
+dests_to_change <-
+  perm_ndelay_dest_df$dest[which(perm_ndelay_dest_df$p_adj <= 0.05)] #filtered levels (were kept)
 dests_to_change
-flights_full_arranged <-
-  flights_full_arranged %>% mutate(dest = replace(dest, !(flights_full_arranged$dest %in% dests_to_change), 'other_dest'))
+flights_full_arranged_25 <-
+  flights_full_arranged_25 %>% mutate(dest = replace(
+    dest,
+    !(flights_full_arranged_25$dest %in% dests_to_change),
+    'other_dest'
+  ))
 
-flights_full_arranged$dest<-as.factor(flights_full_arranged$dest) #convert back to factor variable
-levels(flights_full_arranged$dest)
+flights_full_arranged_25$dest <-
+  as.factor(flights_full_arranged_25$dest) #convert back to factor variable
+levels(flights_full_arranged_25$dest)
 
 
 #change destination column into number categories
-dest_levels_after_change<-data.frame(dest=levels(flights_full_arranged$dest))
-dest_levels_after_change$new_name<-1:nrow(dest_levels_after_change)
-dest_number_cat<-lapply(flights_full_arranged$dest, function(row){
-  y<-which(row==dest_levels_after_change$dest)
-  y
-})
-flights_full_arranged$dest<-as.factor(unlist(dest_number_cat))
-levels(flights_full_arranged$dest)
+dest_levels_after_change <-
+  data.frame(dest = levels(flights_full_arranged_25$dest))
+dest_levels_after_change$new_name <- 1:nrow(dest_levels_after_change)
+dest_number_cat <-
+  lapply(flights_full_arranged_25$dest, function(row) {
+    y <- which(row == dest_levels_after_change$dest)
+    y
+  })
+flights_full_arranged_25$dest <- as.factor(unlist(dest_number_cat))
+levels(flights_full_arranged_25$dest)
 
-#change seats levels in flights_full_arranged
-flights_full_arranged$seats<-as.character(flights_full_arranged$seats)
-seats_to_change<-perm_ndelay_seats_df$seats[which(perm_ndelay_seats_df$p_adj<=0.05)] #filtered levels (were kept)
+#change seats levels in flights_full_arranged_25
+flights_full_arranged_25$seats <-
+  as.character(flights_full_arranged_25$seats)
+seats_to_change <-
+  perm_ndelay_seats_df$seats[which(perm_ndelay_seats_df$p_adj <= 0.05)] #filtered levels (were kept)
 seats_to_change
-flights_full_arranged <-
-  flights_full_arranged %>% mutate(seats = replace(seats, !(flights_full_arranged$seats %in% seats_to_change), 'other_seats'))
+flights_full_arranged_25 <-
+  flights_full_arranged_25 %>% mutate(seats = replace(
+    seats,
+    !(flights_full_arranged_25$seats %in% seats_to_change),
+    'other_seats'
+  ))
 
-flights_full_arranged$seats<-as.factor(flights_full_arranged$seats) #convert back to factor variable
-levels(flights_full_arranged$seats)
+flights_full_arranged_25$seats <-
+  as.factor(flights_full_arranged_25$seats) #convert back to factor variable
+levels(flights_full_arranged_25$seats)
 
 
-str(flights_full_arranged)
-
+str(flights_full_arranged_25)
+summary(flights_full_arranged_25)
 ########################################################################################
 
 # plot normalized delay per level in each variable
