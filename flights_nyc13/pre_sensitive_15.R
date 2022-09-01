@@ -73,87 +73,95 @@ levels_manu_model <- levels(factor(flights_full_arranged_15$manu_model)) #levels
 levels_dest<-levels(factor(flights_full_arranged_15$dest)) #levels of destinations
 levels_seats<-levels(factor(flights_full_arranged_15$seats)) #levels of seats
 
-# origin_num_delay_var<-function(var_name,levels_var) {
-#   origin_delay_vec<-sapply(levels_var, simplify = TRUE, FUN=function(one_level){
-#     df_summarize<-flights_full_arranged_15 %>% filter((!! sym(var_name))==one_level) %>% group_by(dep_delay, .drop=FALSE) %>% tally
-#     number_delay_in_level<-df_summarize$n[df_summarize$dep_delay==1]
-#     number_delay_in_level
-#   })
-#   origin_delay_vec
-# }
-# 
-# origin_num_delay_model<-origin_num_delay_var('model',levels_model)
-# origin_num_delay_manufacturer<-origin_num_delay_var('manufacturer',levels_manufacturer)
-# origin_num_delay_manu_model<-origin_num_delay_var('manu_model',levels_manu_model)
-# origin_num_delay_dest<-origin_num_delay_var('dest',levels_dest)
-# origin_num_delay_seats<-origin_num_delay_var('seats',levels_seats)
-# 
-# 
-# perm_vec_var<-function(levels_var_model, origin_num_delay_var){
-#   perm_vec<-rep(1, length(levels_var_model))
-#   perm_vec<-setNames(perm_vec, names(origin_num_delay_var))
-# }
-# 
-# perm_ndelay_vec_model<-perm_vec_var(levels_model, origin_num_delay_model)
-# perm_ndelay_vec_manufacturer<-perm_vec_var(levels_manufacturer, origin_num_delay_manufacturer)
-# perm_ndelay_vec_manu_model<-perm_vec_var(levels_manu_model, origin_num_delay_manu_model)
-# perm_ndelay_vec_dest<-perm_vec_var(levels_dest, origin_num_delay_dest)
-# perm_ndelay_vec_seats<-perm_vec_var(levels_seats, origin_num_delay_seats)
-# 
-# create_perm_ndelay_vec_var<-function(flights_full_perm, var_name,levels_var, origin_num_delay_var, perm_vec_var) {
-#   perm_num_delay_var <- sapply(levels_var, simplify = TRUE, FUN=function(one_level){
-#     df_summarize<-flights_full_perm %>% filter((!! sym(var_name))==one_level) %>% group_by(dep_delay, .drop=FALSE) %>% tally
-#     number_delay_in_level<-df_summarize$n[df_summarize$dep_delay==1]
-#     number_delay_in_level
-#   })
-#   ind_greater<-which(perm_num_delay_var>=origin_num_delay_var)
-#   perm_vec_var[ind_greater]<-perm_vec_var[ind_greater]+1
-#   perm_vec_var
-# }
-# 
-# num_perm<-500
-# for (iter in 1:num_perm){
-#   print(iter)
-#   flights_full_perm<-transform(flights_full_arranged_15, dep_delay = sample(dep_delay))
-#   perm_ndelay_vec_model<-create_perm_ndelay_vec_var(flights_full_perm, 'model', levels_model, origin_num_delay_model, perm_ndelay_vec_model)
-#   perm_ndelay_vec_manufacturer<-create_perm_ndelay_vec_var(flights_full_perm, 'manufacturer', levels_manufacturer, origin_num_delay_manufacturer, perm_ndelay_vec_manufacturer)
-#   perm_ndelay_vec_manu_model<-create_perm_ndelay_vec_var(flights_full_perm, 'manu_model', levels_manu_model, origin_num_delay_manu_model, perm_ndelay_vec_manu_model)
-#   perm_ndelay_vec_dest<-create_perm_ndelay_vec_var(flights_full_perm, 'dest', levels_dest, origin_num_delay_dest, perm_ndelay_vec_dest)
-#   perm_ndelay_vec_seats<-create_perm_ndelay_vec_var(flights_full_perm, 'seats', levels_seats, origin_num_delay_seats, perm_ndelay_vec_seats)
-# }
-# 
-# #save perm_ndelay_vec_var output from permutations to csv (as tibble data frmae)
-# perm_ndelay_vec_model_df = tibble(name = names(perm_ndelay_vec_model), value = perm_ndelay_vec_model)
-# write.table(perm_ndelay_vec_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_model_df_15_1.csv",  sep=",",  row.names=FALSE)
-# perm_ndelay_vec_manufacturer_df = tibble(name = names(perm_ndelay_vec_manufacturer), value = perm_ndelay_vec_manufacturer)
-# write.table(perm_ndelay_vec_manufacturer_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manufacturer_df_15_1.csv",  sep=",",  row.names=FALSE)
-# perm_ndelay_vec_manu_model_df = tibble(name = names(perm_ndelay_vec_manu_model), value = perm_ndelay_vec_manu_model)
-# write.table(perm_ndelay_vec_manu_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manu_model_df_15_1.csv",  sep=",",  row.names=FALSE)
-# perm_ndelay_vec_dest_df = tibble(name = names(perm_ndelay_vec_dest), value = perm_ndelay_vec_dest)
-# write.table(perm_ndelay_vec_dest_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_dest_df_15_1.csv",  sep=",",  row.names=FALSE)
-# perm_ndelay_vec_seats_df = tibble(name = names(perm_ndelay_vec_seats), value = perm_ndelay_vec_seats)
-# write.table(perm_ndelay_vec_seats_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_seats_df_15_1.csv",  sep=",",  row.names=FALSE)
+run_permutations = FALSE
+run_permutations = FALSE
+run_permutations = FALSE
+run_permutations = FALSE
+run_permutations = FALSE
+if(run_permutations){
+   origin_num_delay_var<-function(var_name,levels_var) {
+     origin_delay_vec<-sapply(levels_var, simplify = TRUE, FUN=function(one_level){
+       df_summarize<-flights_full_arranged_15 %>% filter((!! sym(var_name))==one_level) %>% group_by(dep_delay, .drop=FALSE) %>% tally
+       number_delay_in_level<-df_summarize$n[df_summarize$dep_delay==1]
+       number_delay_in_level
+     })
+     origin_delay_vec
+   }
+   
+   origin_num_delay_model<-origin_num_delay_var('model',levels_model)
+   origin_num_delay_manufacturer<-origin_num_delay_var('manufacturer',levels_manufacturer)
+   origin_num_delay_manu_model<-origin_num_delay_var('manu_model',levels_manu_model)
+   origin_num_delay_dest<-origin_num_delay_var('dest',levels_dest)
+   origin_num_delay_seats<-origin_num_delay_var('seats',levels_seats)
+   
+   
+   perm_vec_var<-function(levels_var_model, origin_num_delay_var){
+     perm_vec<-rep(1, length(levels_var_model))
+     perm_vec<-setNames(perm_vec, names(origin_num_delay_var))
+   }
+   
+   perm_ndelay_vec_model<-perm_vec_var(levels_model, origin_num_delay_model)
+   perm_ndelay_vec_manufacturer<-perm_vec_var(levels_manufacturer, origin_num_delay_manufacturer)
+   perm_ndelay_vec_manu_model<-perm_vec_var(levels_manu_model, origin_num_delay_manu_model)
+   perm_ndelay_vec_dest<-perm_vec_var(levels_dest, origin_num_delay_dest)
+   perm_ndelay_vec_seats<-perm_vec_var(levels_seats, origin_num_delay_seats)
+   
+   create_perm_ndelay_vec_var<-function(flights_full_perm, var_name,levels_var, origin_num_delay_var, perm_vec_var) {
+     perm_num_delay_var <- sapply(levels_var, simplify = TRUE, FUN=function(one_level){
+       df_summarize<-flights_full_perm %>% filter((!! sym(var_name))==one_level) %>% group_by(dep_delay, .drop=FALSE) %>% tally
+       number_delay_in_level<-df_summarize$n[df_summarize$dep_delay==1]
+       number_delay_in_level
+     })
+     ind_greater<-which(perm_num_delay_var>=origin_num_delay_var)
+     perm_vec_var[ind_greater]<-perm_vec_var[ind_greater]+1
+     perm_vec_var
+   }
+   
+   num_perm<-500
+   for (iter in 1:num_perm){
+     print(iter)
+     flights_full_perm<-transform(flights_full_arranged_15, dep_delay = sample(dep_delay))
+     perm_ndelay_vec_model<-create_perm_ndelay_vec_var(flights_full_perm, 'model', levels_model, origin_num_delay_model, perm_ndelay_vec_model)
+     perm_ndelay_vec_manufacturer<-create_perm_ndelay_vec_var(flights_full_perm, 'manufacturer', levels_manufacturer, origin_num_delay_manufacturer, perm_ndelay_vec_manufacturer)
+     perm_ndelay_vec_manu_model<-create_perm_ndelay_vec_var(flights_full_perm, 'manu_model', levels_manu_model, origin_num_delay_manu_model, perm_ndelay_vec_manu_model)
+     perm_ndelay_vec_dest<-create_perm_ndelay_vec_var(flights_full_perm, 'dest', levels_dest, origin_num_delay_dest, perm_ndelay_vec_dest)
+     perm_ndelay_vec_seats<-create_perm_ndelay_vec_var(flights_full_perm, 'seats', levels_seats, origin_num_delay_seats, perm_ndelay_vec_seats)
+   }
+   
+   #save perm_ndelay_vec_var output from permutations to csv (as tibble data frmae)
+   perm_ndelay_vec_model_df = tibble(name = names(perm_ndelay_vec_model), value = perm_ndelay_vec_model)
+   write.table(perm_ndelay_vec_model_df , file = "../output/perm_ndelay_vec_model_df_15_1.csv",  sep=",",  row.names=FALSE)
+   perm_ndelay_vec_manufacturer_df = tibble(name = names(perm_ndelay_vec_manufacturer), value = perm_ndelay_vec_manufacturer)
+   write.table(perm_ndelay_vec_manufacturer_df , file = "../output/perm_ndelay_vec_manufacturer_df_15_1.csv",  sep=",",  row.names=FALSE)
+   perm_ndelay_vec_manu_model_df = tibble(name = names(perm_ndelay_vec_manu_model), value = perm_ndelay_vec_manu_model)
+   write.table(perm_ndelay_vec_manu_model_df , file = "../output/final_project/perm_ndelay_vec_manu_model_df_15_1.csv",  sep=",",  row.names=FALSE)
+   perm_ndelay_vec_dest_df = tibble(name = names(perm_ndelay_vec_dest), value = perm_ndelay_vec_dest)
+   write.table(perm_ndelay_vec_dest_df , file = "../output/perm_ndelay_vec_dest_df_15_1.csv",  sep=",",  row.names=FALSE)
+   perm_ndelay_vec_seats_df = tibble(name = names(perm_ndelay_vec_seats), value = perm_ndelay_vec_seats)
+   write.table(perm_ndelay_vec_seats_df , file = "../output/perm_ndelay_vec_seats_df_15_1.csv",  sep=",",  row.names=FALSE)
+  
+   #merge all df from permutation test to 1 summed df for each variable
+   merge_df<-function(var_name) {
+     # before merging all dfs observed from multiple observations
+     perm_ndelay_var_df_1 <- read.table(file=paste("../output/perm_ndelay_vec_",var_name,"_df_15_1.csv", sep=""),  sep=",", header=TRUE)
+     perm_ndelay_var_df_2 <- read.table(file=paste("../output/perm_ndelay_vec_",var_name,"_df_15_2.csv", sep=""),  sep=",", header=TRUE)
+     perm_ndelay_var_df_1$value <- perm_ndelay_var_df_1$value + perm_ndelay_var_df_2$value -1
+     write.table(perm_ndelay_var_df_1 , file = paste("../output/perm_ndelay_merged_vec_", var_name,"_df_15.csv", sep=""),  sep=",",  row.names=FALSE)
+     perm_ndelay_var_df_1
+   }
+   model_df_merged<-merge_df("model")
+   manu_df_merged<-merge_df("manufacturer")
+   manu_model_df_merged<-merge_df("manu_model") 
+   dest_df_merged<-merge_df("dest") 
+   seats_df_merged<-merge_df("seats") 
 
-# #merge all df from permutation test to 1 summed df for each variable
-# merge_df<-function(var_name) {
-#   # before merging all dfs observed from multiple observations
-#   perm_ndelay_var_df_1 <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_",var_name,"_df_15_1.csv", sep=""),  sep=",", header=TRUE)
-#   perm_ndelay_var_df_2 <- read.table(file=paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_",var_name,"_df_15_2.csv", sep=""),  sep=",", header=TRUE)
-#     perm_ndelay_var_df_1$value <- perm_ndelay_var_df_1$value + perm_ndelay_var_df_2$value -1
-#   write.table(perm_ndelay_var_df_1 , file = paste("G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_merged_vec_", var_name,"_df_15.csv", sep=""),  sep=",",  row.names=FALSE)
-#   perm_ndelay_var_df_1
-# }
-# model_df_merged<-merge_df("model")
-# manu_df_merged<-merge_df("manufacturer")
-# manu_model_df_merged<-merge_df("manu_model") 
-# dest_df_merged<-merge_df("dest") 
-# seats_df_merged<-merge_df("seats") 
+}
 
 
 #display plots of p-val for each level and flights count for each level
 num_perm<-1000
 perm_result_var_df<-function(var_name) {
-  perm_ndelay_var_df <- read.table(file=paste("perm_ndelay_merged_vec_",var_name,"_df_15.csv", sep=""),  sep=",", header=TRUE)
+  perm_ndelay_var_df <- read.table(file=paste("../output/perm_ndelay_merged_vec_",var_name,"_df_15.csv", sep=""),  sep=",", header=TRUE)
   colnames(perm_ndelay_var_df)[1]<-var_name
   perm_ndelay_var_df$p_val<- perm_ndelay_var_df$value/num_perm
   perm_ndelay_var_df$p_adj<-p.adjust(perm_ndelay_var_df$p_val, method = "BH")
