@@ -81,10 +81,7 @@ levels_seats <-
   levels(factor(flights_full_arranged_15$seats)) #levels of seats
 
 run_permutations = FALSE
-run_permutations = FALSE
-run_permutations = FALSE
-run_permutations = FALSE
-run_permutations = FALSE
+
 if (run_permutations) {
   origin_num_delay_var <- function(var_name, levels_var) {
     origin_delay_vec <-

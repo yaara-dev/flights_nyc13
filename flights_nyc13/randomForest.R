@@ -2,8 +2,8 @@ install.packages('ranger')
 install.packages('ROSE')
 library(ranger)
 library(ROSE)
-
-
+library(caret) 
+  
 get_balanced_df <- function(flights_full_arranged) {
   balanced.data <-
     ovun.sample(
@@ -11,17 +11,23 @@ get_balanced_df <- function(flights_full_arranged) {
       flights_full_arranged,
       method = "both",
       p = 0.5,
-      seed = 26
+      seed = 1996
     )$data
   return(balanced.data)
 }
 
-balanced_data_15 <- get_balanced_df(flights_full_arranged_15)
+#balance dataset
 balanced_data <- get_balanced_df(flights_full_arranged)
+
+#sensitivity check
+#15
+balanced_data_15 <- get_balanced_df(flights_full_arranged_15)
+
+#25
 balanced_data_25 <- get_balanced_df(flights_full_arranged_25)
 
-table(balanced_data_15$dep_delay)
 table(balanced_data$dep_delay)
+table(balanced_data_15$dep_delay)
 table(balanced_data_25$dep_delay)
 
 train_test_split <- function(balanced_data) {
@@ -32,17 +38,20 @@ train_test_split <- function(balanced_data) {
   return(train_test)
 }
 
+#split to train and test
+train <- train_test_split(balanced_data)[[1]]
+test <- train_test_split(balanced_data)[[2]]
+dim(train)
+dim(test)
+
+
+#sensitivity check
 #15
 train_15 <- train_test_split(balanced_data_15)[[1]]
 test_15 <- train_test_split(balanced_data_15)[[2]]
 dim(train_15)
 dim(test_15)
 
-#20
-train <- train_test_split(balanced_data)[[1]]
-test <- train_test_split(balanced_data)[[2]]
-dim(train)
-dim(test)
 
 #25
 train_25 <- train_test_split(balanced_data_25)[[1]]
@@ -62,6 +71,7 @@ run_random <- function(train) {
   return(fit)
 }
 
+#run random forest
 rf <- run_random(train)
 rf
 
@@ -75,22 +85,26 @@ rf_25 <- run_random(train_25)
 rf_25
 
 
-
+##prediction
 pred <- predict(rf, test)
 confusion <- table(test$dep_delay, pred$predictions)
 confusion
 
+
+confusionMatrix(confusion)
 
 ##sensitivity
 #15
 pred_15 <- predict(rf_15, test_15)
 confusion_15 <- table(test_15$dep_delay, pred_15$predictions)
 confusion_15
+confusionMatrix(confusion_15)
 
 #25
 pred_25 <- predict(rf_25, test_25)
 confusion_25 <- table(test_25$dep_delay, pred_25$predictions)
 confusion_25
+confusionMatrix(confusion_25)
 
 par(mfrow = c(1, 3))
 # plot confusion matrix
