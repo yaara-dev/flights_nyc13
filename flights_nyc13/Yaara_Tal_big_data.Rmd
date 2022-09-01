@@ -17,6 +17,9 @@ summary(cars)
 ```
 
 ## Research Aim
+Our goal is to generate a prediction model of departure delay time.  
+Reliable prediction will bennefit airports and airlines as well as paaengers. Airports can improve preparation and resource allocations in advance. Airlines are charged extra by airports for flight delays, and 
+
 
 You can also embed plots, for example:
 
