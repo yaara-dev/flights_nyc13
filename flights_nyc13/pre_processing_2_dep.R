@@ -294,15 +294,15 @@ if(run_permutations){
   
   #save perm_ndelay_vec_var output from permutations to csv (as tibble data frmae)
   perm_ndelay_vec_model_df = tibble(name = names(perm_ndelay_vec_model), value = perm_ndelay_vec_model)
-  write.table(perm_ndelay_vec_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_model_df.csv",  sep=",",  row.names=FALSE)
+  write.table(perm_ndelay_vec_model_df , file = "../output/perm_ndelay_vec_model_df.csv",  sep=",",  row.names=FALSE)
   perm_ndelay_vec_manufacturer_df = tibble(name = names(perm_ndelay_vec_manufacturer), value = perm_ndelay_vec_manufacturer)
-  write.table(perm_ndelay_vec_manufacturer_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manufacturer_df.csv",  sep=",",  row.names=FALSE)
+  write.table(perm_ndelay_vec_manufacturer_df , file = "../output/perm_ndelay_vec_manufacturer_df.csv",  sep=",",  row.names=FALSE)
   perm_ndelay_vec_manu_model_df = tibble(name = names(perm_ndelay_vec_manu_model), value = perm_ndelay_vec_manu_model)
-  write.table(perm_ndelay_vec_manu_model_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_manu_model_df.csv",  sep=",",  row.names=FALSE)
+  write.table(perm_ndelay_vec_manu_model_df , file = "../output/perm_ndelay_vec_manu_model_df.csv",  sep=",",  row.names=FALSE)
   perm_ndelay_vec_dest_df = tibble(name = names(perm_ndelay_vec_dest), value = perm_ndelay_vec_dest)
-  write.table(perm_ndelay_vec_dest_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_dest_df.csv",  sep=",",  row.names=FALSE)
+  write.table(perm_ndelay_vec_dest_df , file = "../output/perm_ndelay_vec_dest_df.csv",  sep=",",  row.names=FALSE)
   perm_ndelay_vec_seats_df = tibble(name = names(perm_ndelay_vec_seats), value = perm_ndelay_vec_seats)
-  write.table(perm_ndelay_vec_seats_df , file = "G:/My Drive/University/Msc/Big_Data_Gur/final_project/perm_ndelay_vec_seats_df.csv",  sep=",",  row.names=FALSE)
+  write.table(perm_ndelay_vec_seats_df , file = "../output/perm_ndelay_vec_seats_df.csv",  sep=",",  row.names=FALSE)
   
   
 }
@@ -316,7 +316,7 @@ perm_result_var_df <- function(var_name) {
   perm_ndelay_var_df <-
     read.table(
       file = paste(
-        "perm_ndelay_merged_vec_",
+        "../output/perm_ndelay_merged_vec_",
         var_name,
         "_df.csv",
         sep = ""
