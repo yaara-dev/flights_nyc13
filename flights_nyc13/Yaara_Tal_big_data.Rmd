@@ -270,6 +270,9 @@ ggplot(flights_full_arranged, aes(x = dep_delay)) +
   ) +
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
 
+## Exploratory data analysis (EDA)
+
+
 # percentage of dep_delay=0
 (length(which(flights_full_arranged$dep_delay < (20)))) / nrow(flights_full_arranged)
 # percentage of dep_delay=1
