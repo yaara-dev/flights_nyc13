@@ -59,12 +59,13 @@ test_25 <- train_test_split(balanced_data_25)[[2]]
 dim(train_25)
 dim(test_25)
 
-run_random <- function(train) {
+run_random <- function(train, ntrees=1000, depth = NULL) {
   fit <- ranger(
     dep_delay ~ .,
     data = train,
-    num.trees = 1000,
+    num.trees = ntrees,
     importance = 'impurity',
+    max.depth = depth,
     verbose = TRUE,
     
   )
@@ -72,7 +73,7 @@ run_random <- function(train) {
 }
 
 #run random forest
-rf <- run_random(train)
+rf <- run_random(train, ntrees = 2000)
 rf
 
 ##sensitivity
