@@ -1,5 +1,5 @@
 ---
-title: "Prediction of flight departure delays"
+title: "Prediction of Flight Departure Delays"
 author: "Yaara Diamant Karasik & Tal Goldberg"
 date: "2022-09-04"
 output: html_document
@@ -12,7 +12,7 @@ knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
 
 ## Introduction
 
-Flight delays are a significant societal problem as they impair airlines, transport companies, air traffic controllers, facility managers, and passengers. Studying flight data is an essential activity for every player involved in the air transportation system. Given the uncertainty of delays, passengers usually plan to travel many hours earlier for their appointments. They might have to increase their travel costs to arrive on time. Airlines suffer penalties, fines, and additional operation costs, such as airport crew and aircraft retention. Regarding sustainability, delays may also increase environmental issues due to increased fuel consumption and gas emissions (Rebollo & Balakrishnan, 2014; Sternberg et al., 2017;Carvalho et al., 2021).
+Flight delays are a significant societal problem as they impair airlines, transport companies, air traffic controllers, facility managers, and passengers. Studying flight data is an essential activity for every player involved in the air transportation system. Given the uncertainty of delays, passengers usually plan to travel many hours earlier for their appointments. They might have to increase their travel costs to arrive on time. Airlines suffer penalties, fines, and additional operation costs, such as airport crew and aircraft retention. Regarding sustainability, delays may also increase environmental issues due to increased fuel consumption and gas emissions (Rebollo and Balakrishnan 2014) (Sternberg et al., 2017); (Carvalho et al. 2021).
 
 This project aims to generate a prediction model of departure delay time. A reliable prediction will benefit airports, airlines, passengers, and global environmental sustainability.
 
@@ -26,7 +26,7 @@ The merged dataset contains 47 variables and 276688 observations.
 
 
 
-```{r}
+```{r, warning = FALSE}
  #Load packages:
  options(repos = list(CRAN="http://cran.rstudio.com/"))
 list.of.packages <-
@@ -74,17 +74,17 @@ library(ranger)
 library(ROSE)
 library(caret)
 library(rpart)
+library(rattle)
 library(rpart.plot)
-#library(rattle)
 library(Metrics)
 library(mlr)
 library(plotly)
 library(caTools)
 library(psych)
-flights <- flights
-airports <- airports
-planes <- planes
-weather <- weather
+flights <- nycflights13::flights
+airports <- nycflights13::airports
+planes <- nycflights13::planes
+weather <- nycflights13::weather
 ```
 
 ```{r}
@@ -106,11 +106,12 @@ head(flights_full)
 
 ```
 
-## Exploratory data analysis (EDA) + pre-proccessing analysis
+## Exploratory data analysis (EDA) and Pre-Proccessing Analysis
 
-In order to predict successfully a delayed flight we would like to use most affecting features (variables) in our model and avoid from features that may increase noise. Achieving this goal requires pre-processing steps in which we reduce the number of variables and the number of levels/categories in variables.
+In order to successfully predict a delayed flight we would like to use the most affecting features/variables in our model and avoid features that may increase noise. Achieving this goal requires pre-processing steps in which we reduce the number of variables and the number of levels/categories in variables.
 
-First, we plotted numeric variables vs. departure delay variable in order to visually spot if there is a linear relationship between them. On top of the scatter plot there is a linear model fit line:
+First, we plotted numeric variables vs. departure delay in order to visually spot if there is a linear relationship between them. On top of the scatter plot there is a linear model fit line:
+
 
 ```{r}
 plot_var_vs_dep_delay <-
@@ -152,11 +153,13 @@ grid.arrange(grobs = plot_list, ncol = 3)
 ```
 
 
+
 We would like to examine a correlation between numeric variables. 
 In order to calculate Pearson correlation, certain assumptions must be met, one of them is that there must be a linear relationship between the variables. Observing the scatter plots above, we can see there is no linear relationship between those numeric variables. 
 Thus, we chose to apply Spearman correlation test, which does not require linear relationship assumptions.
 
 Spearman correlation test between numerical variables in the datase:
+
 
 ```{r}
 cor_test_mat <- corr.test(numeric_flights_full, method = "spearman")  
@@ -174,15 +177,10 @@ Plot of correlation heatmap:
 cor.plot(cor_test_mat$r, main = "Correlation Matrix (spearman)", stars = TRUE, xlas = 2)
 ```
 
-dewp and temp are highly correlated (0.9), so are wind speed and wind gust (0.87), and air time and distance (0.98).The correlation is significant (pval\<0.05) We decided to remove dewp, air time, and wind gust to avoid double variables in the model. All three variables are an outcome in some way of the variable they are highly correlated to.
+The variables 'dewp' and 'temp' are highly correlated (0.9), so are 'wind_speed' and 'wind_gust' (0.87), and 'air_time' and 'distance' (0.98).The correlation is significant (pval\<0.05) We decided to remove 'dewp', 'air_time', and 'wind_gust' to avoid double variables in the model. All three variables are logically an outcome of the variable they are highly correlated to.
 
 We edited some of the columns in our dataset in order to improve their potential contribution to the prediction:
 
-Save original data before processing##todo- erase line when done!
-
-```{r}
-flights_full_old <- flights_full
-```
 
 Convert hours column to minutes
 
@@ -294,7 +292,7 @@ length(which(is.na(flights_full$speed)))
 length(which(is.na(flights_full$wind_gust)))
 ```
 
-### Dividing departure delay variable into 2 categories - 'delay' vs. 'no delay'
+### Dividing Departure Delay Variable into 2 Categories - 'delay' vs. 'no delay'
 
 Since we would like to predict if a particular flight will be delayed, we logically selected a threshold indicating a significant delay on time - 20 minutes.
 
@@ -387,9 +385,13 @@ flights_full_arranged <-
 str(flights_full_arranged)
 ```
 
-### Merge Manufacturer + Model Variables
+### Combine 'manufacturer' and 'model' Variables
 
-We found that part of model planes' were repeated in several manufacturers. It means that when two planes share the same model name but different manufacturers, they are Not actually recognized by exactly the same model. As a result, we decided to combine 'manufacturer' and 'model' columns into one column named 'manu_model' with the aim of reducing the amount of variables in the dataset.
+We wanted to check whether the variable 'model' is a unique variable. That is, there are no model names that appear under two different manufacturers. Our examination revealed a small number of models whose names are not unique and appear under two different manufacturers.
+To overcome this problem, we decided to combine 'manufacturer' and 'model' columns into one column named 'manu_model' with the aim of reducing the amount of variables in the dataset. The manu-model column contains unique names for each model because each model is coupled to its manufacturer's name.
+
+Later we checked whether this variable has priority over the manufacturer variable, and we saw that the variable is equivalent and, in some cases, even takes on higher importance in the models we run. Therefore, we will delete the 'model' and 'manufacturer' columns and leave the 'manu-model' column containing both information.
+
 
 ```{r}
 # show in how many different manufacturers each model presented
@@ -398,7 +400,10 @@ table_manufacturer_model<-table(manufacturer_model_df$model)
 table_manufacturer_model[table_manufacturer_model>1] # models' prevalence in different manufacturers
 
 ```
-# merge manufacturer and model columns into one column
+
+Combine manufacturer and model columns into one column
+
+```{r}
 manu_model <-
   paste(flights_full_arranged$manufacturer,
         flights_full_arranged$model,
@@ -408,7 +413,8 @@ flights_full_arranged$manu_model <- manu_model
 ```
 
 ### Plots of normalized delayed flights counts per variable's categories
-In order to visually check whether a variable demonstrates variability in delayed flights (in cases when dep_delay=1) we created bar plot for each variable separately, while taking into account the amount of flights in each category. Thus, for each category in a given variable we calculated relative amount of delayed flights out of total flights amount in the current category. Due to this calculation we can compare between the categories.
+
+In order to visually check whether a variable demonstrates variability in delayed flights (in cases when dep_delay=1), we created a bar plot for each variable separately while considering the number of flights in each category. Thus, for each category in a given variable we calculated the relative amount of delayed flights out of total flights in the current category. Due to this calculation, we can compare the categories.
 
 ```{r}
 flights_full_arranged_factors_all <-
@@ -471,18 +477,24 @@ gplot_var <- function(var_name, convert_x, palette_a = FALSE) {
 
 ```
 
+Destination
+
 ```{r}
 # plot normalized delayed flights in destination variable
 dest_plot<-gplot_var("dest", convert_x=TRUE)                                                                        
 dest_plot
 ```
 
+Origin Airport
+
 ```{r}
 
-# plot normalized delayed flights in model variable
+# plot normalized delayed flights in origin variable
 origin_plot<-gplot_var("origin", convert_x=FALSE, palette_a="PuRd")                                                                    
 origin_plot
 ```
+
+Month
 
 ```{r}
 # plot normalized delayed flights in month variable
@@ -491,11 +503,15 @@ month_plot<-gplot_var("month", convert_x=FALSE)
 month_plot
 ```
 
+Carrier (airline)
+
 ```{r}
 # plot normalized delayed flights in carrier variable
 carrier_plot<-gplot_var("carrier", convert_x=FALSE)                                                                        
 carrier_plot
 ```
+
+Year of Manufacturer
 
 ```{r}
 # plot normalized delayed flights in year variable
@@ -504,11 +520,14 @@ year_plot<-gplot_var("year", convert_x=TRUE)
 year_plot
 ```
 
+Engine Type
 ```{r}
 # plot normalized delayed flights in type variable
 type_plot<-gplot_var("type", convert_x=FALSE, palette_a="Oranges")                                                                    
 type_plot
 ```
+
+Manufacture
 
 ```{r}
 # plot normalized delayed flights in manufacturer variable
@@ -516,11 +535,15 @@ manufacturer_plot<-gplot_var("manufacturer", convert_x=TRUE)
 manufacturer_plot
 ```
 
+Model
+
 ```{r}
 # plot normalized delayed flights in model variable
 model_plot<-gplot_var("model", convert_x=TRUE)                                                                        
 model_plot
 ```
+
+Number of Engines
 
 ```{r}
 # plot normalized delayed flights in engines variable
@@ -528,11 +551,15 @@ engines_plot<-gplot_var("engines", convert_x=FALSE, palette_a="BuGn")
 engines_plot
 ```
 
+Visibility
+
 ```{r}
 # plot normalized delayed flights in visib variable
 visib_plot<-gplot_var("visib", convert_x=FALSE)                                                                        
 visib_plot
 ```
+
+Time Zone
 
 ```{r}
 # plot normalized delayed flights in tzone variable
@@ -540,11 +567,15 @@ tzone_plot<-gplot_var("tzone", convert_x=TRUE, palette_a="RdPu")
 tzone_plot
 ```
 
+Week Day
+
 ```{r}
 # plot normalized delayed flights in w_day variable
 w_day_plot<-gplot_var("w_day", convert_x=FALSE, palette_a="YlGn")                                                                     
 w_day_plot
 ```
+
+Week Number
 
 ```{r}
 # plot normalized delayed flights in week_num variable
@@ -552,14 +583,17 @@ week_num_plot<-gplot_var("week_num", convert_x=FALSE)
 week_num_plot
 ```
 
+Manu- Model
+
 ```{r}
 # plot normalized delayed flights in manu_model variable
 manu_model_plot<-gplot_var("manu_model", convert_x=TRUE)                                                                        
 manu_model_plot
-c
 ```
+
 ### Plot Multiple Variables
-We have seen that overall there isn't one particular variable that has an obvious direct relationship to the departure delay. The purpose of the next plot is to examine the option of multiple variables together having a more clear relation to the departure delay.
+
+We have seen that overall there is not one particular variable that has an apparent direct relationship to the departure delay. The following plot aims to examine the option of multiple variables together having a more apparent relation to the departure delay.
 
 ```{r}
 wind_dir_df<- flights_full_arranged %>% group_by(origin, wind_dir) %>% summarize(total_count=n(), mean_speed = mean(wind_speed))
@@ -585,10 +619,12 @@ ggplot(df_wind, aes(x = wind_dir, y = relative_count_1, fill = mean_speed)) +
 
 ### Categories Reduction in Factorial Variables using Permutation Test
 
-In order to optimize our model, we decreased the number of categories (levels) in factorial variables that are identified with a large number of categories. This step was performed using the statistical permutation test on each variable separately. Our assumption is that in a particular variable, a category that belongs to a delayed flights, not by chance, should be considered individually in our model since it can indicate the possibility of delay of a future flight related to this category.
+In order to optimize our model, we decreased the number of categories (levels) in factorial variables that are identified with a large number of categories. This step was performed using a statistical permutation test on each variable separately.
+Our assumption is that in a particular variable, a category that belongs to a delayed flight, not by chance, should be considered individually in our model since it can indicate the possibility of delay of a future flight related to this category.
 However, a category that repeats on random realizations with the same or even larger prevalence of delayed flights will probably fail to reject the null hypothesis that delayed flights are not over-represented in the current category in the original dataset. Thus, the insignificant categories of a variable should be combined into one aggregated category.
 
-We performed 2000 realizations of the original dataset: During each realization, we randomly shuffled the departure time delay ('dep_delay') column and counted how many flights labeled as delayed (with dep_delay=1) for each category in each variable separately. Next, we compared it to the original count of departure delayed flights in the particular category.
+We performed 2000 realizations of the original dataset: During each realization, we randomly shuffled the departure time delay ('dep_delay') column and counted how many flights labeled as delayed (with dep_delay=1) for each category in each variable separately.
+Next, we compared it to the original count of departure delayed flights in the particular category.
 The P-value for a given category was calculated as the number of realizations when the count of departure delayed flights was equal to or even higher than the original delayed flights count in this category (plus one), divided by the total number of realizations.
 For example, a permutation analysis p-value of 1e-3 (in case of 1000 total realizations) means that the null hypothesis was rejected in all the realizations, suggesting that the specific category is significant in distinguishing delayed flights in the original dataset, using a confidence of 0.005. Finally, the permutation analysis p-value was corrected for multiple testing using the Benjamini-Hochberg procedure.
 
@@ -601,8 +637,8 @@ We applied this step to several variables:
 * "seats" included 48 categories at the beginning and 8 at the end of the permutation test.
 * "dest" variable included at first 100 categories, and after the permutation test had only 52 categories.
 
-We provide in this project the complete output data frames observed from the permutation analysis. There are 5 data frames - each variable has its own data frame includes the number of realizations (plus one) in which delayed flights counts was equal to or higher than the original counts for each category.
-We visualized the results for each variable in bar plots representing p-value adjusted values (after Benjamini-Hochberg correction) of each category. A line representing FDR=0.05 is presented on the plot as well in order to emphasize cases (categories) when the null hypothesis was rejected. In addition, we generated plots of total flights in each category to compare p-value results to total amount of flights in each category.
+We provide in this project the complete output data frames observed from the permutation analysis. There are 5 data frames - each variable has its own data frame that includes the number of realizations (plus one) in which delayed flight counts were equal to or higher than the original counts for each category.
+We visualized the results for each variable in bar plots representing p-value adjusted values (after Benjamini-Hochberg correction) of each category. A line representing FDR=0.05 is presented on the plot as well in order to emphasize cases (categories) when the null hypothesis was rejected. In addition, we generated plots of total flights in each category to compare p-value results to the total amount of flights in each category.
 
 ```{r}
 
@@ -1088,7 +1124,7 @@ levels(flights_full_arranged$seats)
 
 #### Sensitivity Check
 
-In order to check the sensitivity of our prediction models to the threshold we chose to distinguish between delayed and non delayed flights, we will generate 2 additional datasets one with higher threshold - 25 minutes, and one with a lower threshold - 15 minutes. Some of the pre-processing is dependent on the labels assigned to each flight (0- non delay, 1- delay). Therefore, we will perform the neccessary pre-processing steps to ensure that the data is coherent.
+In order to check the sensitivity of our prediction models to the threshold we chose to distinguish between delayed and non-delayed flights, we will generate two additional datasets, one with a higher threshold - 25 minutes, and one with a lower threshold - 15 minutes. Some of the pre-processing depends on the labels assigned to each flight (0- non-delay, 1- delay). Therefore, we will perform the necessary pre-processing steps to ensure that the data is coherent.
 
 Threshold = 15 minutes
 
@@ -2166,10 +2202,17 @@ ncol(flights_full_arranged)
 
 ```
 
-###Data Balancing
 
-We should balance the dataset because the amount of delays is \~20%
+There is a need to balance the dataset because the amount of delays is \~20%.
+Imbalanced data can cause the model to be very good at learning the class that is the majority, but it will not learn to predict the minority class at the same level.
+There are mainly two ways to handle an imbalanced dataset. 
+1. Random oversampling- duplicates examples from the minority class in the training dataset and can result in overfitting for some models.
+2. Random undersampling- delete examples from the majority class and can result in losing information invaluable to a model.
+We are using ovun.sample function from the ROSE package, which creates possibly balanced samples by a combination of random over-sampling minority examples and under-sampling
+majority examples.
 
+
+This is the data proportion before balancing:
 ```{r echo=FALSE}
 
 set.seed(20)
@@ -2202,6 +2245,7 @@ get_balanced_df <- function(flights_full_arranged) {
  table(balanced_data$dep_delay)
 ```
 
+And this is after balancing the data:
 ```{r echo=FALSE}
 #plot flights counts per 2 dep_delay categories
 ggplot(balanced_data, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
@@ -2332,8 +2376,7 @@ model_best_param = rpart(dep_delay~ .,   data=train, method = 'class', control =
 Visualization of the tree:
 
 ```{r}
-# visualization
-library(rattle)
+
 split.fun <- function(x, labs, digits, varlen, faclen)
 {
   # replace commas with spaces (needed for strwrap)
@@ -2409,7 +2452,7 @@ run_random <- function(train, ntrees=1000, depth = NULL) {
 }
 ```
 
-```{r}
+```{r, label='rf'}
 rf <- run_random(train)
 rf
 ```
@@ -2429,7 +2472,7 @@ As we can see we have high accuracy for predicting delay!
 
 Earlier on we chose 20 minutes as a threshold to determine if a flight is considered delayed.We generated two additional datasets: one with a higher threshold (25 minutes) and one with a lower threshold (15 minutes) in order to test the sensitivity of our predictions. Let's run our model on these datasets: Let's run our model on these datasets:
 
-```{r}
+```{r, label='rf2'}
 ##sensitivity check
 #threshold = 15
 rf_15 <- run_random(train_15) #run random forest
@@ -2548,8 +2591,8 @@ grid.arrange(p2, p3, ncol = 2)
 
 Check for overfit with twice the number of trees and a limited depth for the trees:
 
-```{r}
-rf_check <- run_random(train, ntrees = 2000)
+```{r, label='overfit'}
+rf_check <- run_random(train, ntrees = 2000, depth = 20)
 pred_check <- predict(rf_check, test)
 confusion_check <- table(test$dep_delay, pred_check$predictions)
 confusionMatrix(confusion_check)
@@ -2576,15 +2619,30 @@ imps_check %>%
 
 ## Discussion
 
-We pre-processed data to optimize each parameter's potential to be helpful in prediction. We used permutation tests to determine which of the levels in each categorical variable with many levels are significant in predicting delays.
+We pre-processed the data to optimize each parameter's potential to be helpful in prediction. We used permutation tests to determine which of the levels in each categorical variable with many levels are significant in predicting delays.
 
-We converted the variable dep_delay from a delay in minutes to a binary variable. 0- no delay, 1- there is a delay. The division was made based on a threshold of late minutes. In order to test the sensitivity to this threshold, we created two more datasets, one with a higher threshold and one with a lower threshold, and ran the prediction models on these two datasets.In both models, decision tree and random forest, there were no differences between the primary dataset and the datasets created for sensitivity testing.
+We converted the variable dep_delay from a delay in minutes to a binary variable. 0- no delay, 1- there is a delay. The division was made based on a threshold of late minutes. In order to test the sensitivity to this threshold, we created two more datasets, one with a higher threshold and one with a lower threshold, and ran the prediction models on these two datasets. In both models, decision tree and random forest, there were no differences between the primary dataset and the datasets created for sensitivity testing.
 
-In the first step, we ran a decision tree model. This model reached an accuracy level of about 70% in delay prediction. In the second step, we wanted to check whether a Random Forest model could learn the data better and give a more accurate prediction. We thought this model would be better because #add explanation. The Random Forest model reached a much higher level of accuracy than the decision tree, 98%. In principle, the chance of an overfit in Random Forest is low thanks to bagging and random feature selection, they are trained independently on different subsets of the training data. However, the high accuracy score raises our concern that the model may overfit the data. In order to examine the matter, we performed another run of the Random Forest model where in this run, we limited the depth of the trees and increased the number of trees (from 1000 to 2000). The result of this run showed 94% accuracy, which is still high but is very unlikely to be overfitted to the large number of trees and the limitation of the trees' depth. Further, model is highly accurate for the test as well, so on the one hand, it may be just excellent at predicting. Another possible explanation is that there is indeed an overfit resulting from the fact that the training and the test are similar since they were taken from the same data set.
+In the first step, we ran a decision tree model. This model reached an accuracy level of about 70% in delay prediction. In the second step, we wanted to check whether a Random Forest model could learn the data better and give a more accurate prediction. We thought this model would be better because random forests are much more robust than a single decision tree. They aggregate many decision trees to limit overfitting and error due to bias and yield valuable results.
 
-In conclusion, we have shown that it is possible to predict if there will be a delay in takeoff with a high probability using a random forest model that considers various parameters related to weather, aircraft characteristics, airport, destination, airlines, etc. For further research, it is worthwhile to implement the model on current databases for two reasons; The first is to verify the model and see that it is not adjusted only for 2013. Second, since the Corona epidemic, the world of flights has changed, i.e., the airlines have changed partly due to bankruptcies of low-cost companies, and the loads at the airport have changed as well.
+The Random Forest model reached a much higher level of accuracy than the decision tree, 98%. In principle, the chance of an overfit in Random Forest is low thanks to bagging and random feature selection; they are trained independently on different subsets of the training data.
+However, the high accuracy score raises our concern that the model may overfit the data. In order to examine the matter, we performed another run of the Random Forest model where we limited the maximum tree depth and increased the number of trees (from 1000 to 2000). The result of this run showed 94% accuracy, which is still high but is unlikely to be overfitted to the large number of trees and the limitation of the trees' depth. Further, the model is highly accurate for the test as well, so it may just be excellent at predicting. Another possible explanation is that there is indeed an overfit resulting from the fact that the training and the test are similar since they were taken from the same data set.
 
+In conclusion, we have shown that it is possible to predict if there will be a delay in takeoff with a high probability using a Random Forest model that considers various parameters related to weather, aircraft characteristics, airport, destination, airlines, etc. For further research, it is worthwhile to implement the model on current databases for two reasons; The first is to verify the model and see that it is not adjusted only for 2013. Second, since the Corona epidemic, the world of flights has changed, for example the airlines have changed partly due to bankruptcies of low-cost companies, and the loads at the airport have changed as well.
 
 #### References
 
-* Visa, S., Ramsay, B., Ralescu, A. L., & Van Der Knaap, E. (2011). Confusion matrix-based feature selection. MAICS, 710(1), 120-127.
+On the relevance of data science for flight delay research: a systematic review
+Carvalho L, Sternberg A, Maia Gonçalves L, Beatriz Cruz A, Soares JA et al.
+Transp. Rev., 2021
+
+A Review on Flight Delay Prediction
+Sternberg A, Soares J, Carvalho D, Ogasawara E
+arXiv [cs.CY], 2017
+
+Characterization and prediction of air traffic delays
+Rebollo JJ, Balakrishnan H
+Transp. Res. Part C: Emerg. Technol., 2014
+
+Visa, S., Ramsay, B., Ralescu, A. L., & Van Der Knaap, E. (2011). Confusion matrix-based feature selection. MAICS, 710(1), 120-127.
+
