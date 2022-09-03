@@ -217,6 +217,10 @@ ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill 
   labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
+# show whether a model shown in several manufacturers
+manufacturer_model_df<-flights_full_arranged %>% group_by(manufacturer, model) %>% summarise(counts=n())
+table_manufacturer_model<-table(manufacturer_model_df$model)
+table_manufacturer_model[table_manufacturer_model>1] # models' prevalence in different manufacturers
 
 # merge manufacturer and model columns into one column
 manu_model <-
