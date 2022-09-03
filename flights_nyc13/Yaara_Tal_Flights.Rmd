@@ -113,6 +113,7 @@ Plot the weather variables vs. the departure delay to see if we can visually spo
 ```{r}
 plot_var_vs_dep_delay <-
   function(var_name, df = numeric_flights_full){
+    df <- df[sample(nrow(df), 10000), ]
      p<-ggplot(data = df, mapping = aes(x = get(var_name), y = dep_delay)) +
       geom_point(alpha = 0.2) +
       geom_smooth(method = "lm",level=0.2) +
@@ -120,7 +121,7 @@ plot_var_vs_dep_delay <-
         x = sprintf("%s", var_name),
         y = "Departure delay (min)",
         title = sprintf("%s vs departure delay", var_name))
-    return(list(p))
+    return(p)
 }
 
 numeric_vars <- c(
@@ -942,7 +943,7 @@ flights_full_arranged$manu_model <-
 levels(flights_full_arranged$manu_model)
 ```
 
-change manu_model column into  one-letter categories
+Change manu_model column into  one-letter categories
 ```{r}
 flights_full_arranged_bf_change <- flights_full_arranged
 manu_model_levels_after_change <-
@@ -963,7 +964,7 @@ flights_full_arranged$manu_model <-
 levels(flights_full_arranged$manu_model)
 ```
 
-change destination levels in flights_full_arranged
+Change destination levels in flights_full_arranged
 ```{r}
 flights_full_arranged$dest <-
   as.character(flights_full_arranged$dest)
@@ -2426,6 +2427,7 @@ imps_check %>%
   ggtitle('Importance') +
   theme_bw(18)
 ```
+
 ## Discussion
 We pre-processed data to optimize each parameter's potential to be helpful in prediction. We used permutation tests to determine which of the levels in each categorical variable with many levels are significant in predicting delays.
 
