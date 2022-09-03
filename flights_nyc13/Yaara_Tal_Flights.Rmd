@@ -115,7 +115,7 @@ plot_var_vs_dep_delay <-
   function(var_name, df = numeric_flights_full){
      p<-ggplot(data = df, mapping = aes(x = get(var_name), y = dep_delay)) +
       geom_point(alpha = 0.2) +
-      geom_smooth(method = "lm") +
+      geom_smooth(method = "lm",level=0.2) +
       labs(
         x = sprintf("%s", var_name),
         y = "Departure delay (min)",
@@ -139,27 +139,12 @@ numeric_vars <- c(
   "humid",
   "dewp"
 )
+numeric_flights_full <-
+  flights_full[,numeric_vars]
 
-plot_list <- list()
-for(var in numeric_vars){
-  p <- plot_var_vs_dep_delay(var_name = var)
-  plot_list <- append(plot_list,p)
-  
-}
-grid.arrange(plot_list[[1]],
-             plot_list[[3]],
-             plot_list[[4]],
-             plot_list[[5]],
-             plot_list[[6]],
-             plot_list[[7]],
-             plot_list[[8]],
-             plot_list[[9]],
-             plot_list[[10]],
-             plot_list[[11]],
-             plot_list[[12]],
-             plot_list[[13]],
-             plot_list[[14]],
-             ncol = 3)
+plot_list <- lapply(numeric_vars, plot_var_vs_dep_delay)
+
+grid.arrange(grobs = plot_list, ncol = 3)
 
 ```
 
@@ -167,8 +152,6 @@ In order to calculate the Pearson correlation, certain assumptions must be met; 
 
 Perform Spearman correlation between weather parameters and flight parameters:
 ```{r}
-numeric_flights_full <-
-  flights_full[,numeric_vars]
 cor_test_mat <- corr.test(numeric_flights_full, method = "spearman")  
 #r
 cor_test_mat$r
