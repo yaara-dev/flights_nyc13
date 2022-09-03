@@ -20,8 +20,7 @@ This project aims to generate a prediction model of departure delay time. A reli
 
 
 Our analysis is based on the public flights dataset taken from the "nycflights13" R package. This package contains information about all flights that departed from NYC in 2013. We used additional datasets from the same package, such as 'planes', 'weather', and 'airport'. These datasets provide extensive information about the flights. 
-'planes' dataset contains construction information about each plane and was merged with the 'flights' dataset by the common variable column "tailnum". 
-'weather' dataset, which includes hourly meteorological data for each airport, was merged with 'flights' according to the "origin" and "time_hour" variable columns.
+'planes' dataset contains construction information about each plane and was merged with the 'flights' dataset by the common variable column "tailnum". 'weather' dataset, which includes hourly meteorological data for each airport, was merged with 'flights' according to the "origin" and "time_hour" variable columns.
 Similarly, the 'airports' dataset, which represents all involved airports and their locations, was merged with 'flights' by "faa"(="dest") variable column.
 The merged dataset contains 47 variables and 276688 observations.
 
@@ -113,6 +112,7 @@ In order to successfully predict a delayed flight we would like to use the most 
 
 First, we plotted numeric variables vs. departure delay in order to visually spot if there is a linear relationship between them. On top of the scatter plot there is a linear model fit line:
 
+
 ```{r}
 plot_var_vs_dep_delay <-
   function(var_name, df = numeric_flights_full){
@@ -153,11 +153,13 @@ grid.arrange(grobs = plot_list, ncol = 3)
 ```
 
 
-We would like to examine correlation between numeric variables. 
-In order to calculate Pearson correlation, certain assumptions must be met; one of them is that there must be a linear relationship between the variables. Observing the scatter plots above, we can see there is no linear relationship between those numeric variables. 
+
+We would like to examine a correlation between numeric variables. 
+In order to calculate Pearson correlation, certain assumptions must be met, one of them is that there must be a linear relationship between the variables. Observing the scatter plots above, we can see there is no linear relationship between those numeric variables. 
 Thus, we chose to apply Spearman correlation test, which does not require linear relationship assumptions.
 
-Thus, we perform Spearman correlation test between numerical variables in the dataset:
+Spearman correlation test between numerical variables in the datase:
+
 
 ```{r}
 cor_test_mat <- corr.test(numeric_flights_full, method = "spearman")  
@@ -168,7 +170,7 @@ cor_test_mat$p
 
 ```
 
-Plot the correlation heatmap
+Plot of correlation heatmap:
 
 ```{r}
 #plot the correlation matrix
@@ -587,7 +589,6 @@ Manu- Model
 # plot normalized delayed flights in manu_model variable
 manu_model_plot<-gplot_var("manu_model", convert_x=TRUE)                                                                        
 manu_model_plot
-c
 ```
 
 ### Plot Multiple Variables
@@ -2189,23 +2190,27 @@ flights_full_arranged_25$seats <-
 
 ## Inference
 
-### Data Balancing
+### Removing Irrelevant Predicting Variables
 
-We decided to exclude manu_model from model analysis since there is a correlation between manu_model and model manufacturer - show test/statistical proves!
+We decided to exclude 'model' and 'manufacturer' variables from our model analysis and instead we took into account the 'manu_model' variable. As we discussed above we combined models and manufacturers into one column represnting unique models according to their manufacturer. This step prevented future mistakenly grouping of planes with identical model name but different manufacturer.
+As we prefer to reduce number of predicting variables in our model to prevent confusion we removed 'model' and 'manufacturer', and let the model basing on 'mau_model' variable.
+
 ```{r echo=FALSE}
 
-flights_full_arranged<-flights_full_arranged %>% select(-c(manu_model))
+flights_full_arranged<-flights_full_arranged %>% select(-c(model, manufacturer))
 ncol(flights_full_arranged)
 
 ```
 
-First, there is a need to balance the dataset because the amount of delays is \~20%.
+
+There is a need to balance the dataset because the amount of delays is \~20%.
 Imbalanced data can cause the model to be very good at learning the class that is the majority, but it will not learn to predict the minority class at the same level.
 There are mainly two ways to handle an imbalanced dataset. 
 1. Random oversampling- duplicates examples from the minority class in the training dataset and can result in overfitting for some models.
 2. Random undersampling- delete examples from the majority class and can result in losing information invaluable to a model.
 We are using ovun.sample function from the ROSE package, which creates possibly balanced samples by a combination of random over-sampling minority examples and under-sampling
 majority examples.
+
 
 This is the data proportion before balancing:
 ```{r echo=FALSE}
@@ -2287,19 +2292,90 @@ test_25 <- train_test_split(balanced_data_25)[[2]]
 ```
 
 ### Classification Decision Tree
-
-Run classification decision tree on train set
+First, we would like to choose best parameters for optimizing model's prediction. Thus, we will use 'mlr' package 
 
 ```{r}
+train_df<-as.data.frame(train)
+test_df<-as.data.frame(test)
 
-class_model <- rpart(dep_delay ~. , data=train, method = 'class',control= rpart.control(cp=0.0004, maxdepth = 26, minsplit = 18))
-#summary(class_model)
+model.mlr <- makeClassifTask(
+  data=train_df, 
+  target="dep_delay"
+)
+
+# Search Parameter for Max Depth
+param_grid <- makeParamSet( 
+  makeDiscreteParam("maxdepth", values=seq(20,30, by=3)),
+  makeDiscreteParam("cp", values=seq(0.0001, 0.0006, by=0.0002)),
+  makeDiscreteParam("minsplit", values=seq(15,25, by=3))
+)
+
+# Define Grid
+control_grid = makeTuneControlGrid()
+
+# Define Cross Validation
+resample = makeResampleDesc("CV", iters = 3L)
+
+# Define Measure
+measure = acc
+
+#set.seed(123) 
+dt_tuneparam <- tuneParams(learner='classif.rpart', 
+                           task=model.mlr, 
+                           resampling = resample,
+                           measures = measure,
+                           par.set=param_grid, 
+                           control=control_grid, 
+                           show.info = TRUE)
+
+dt_tuneparam
+
+result_hyperparam <- generateHyperParsEffectData(dt_tuneparam, partial.dep = TRUE)
+```
+
+plot of mean accuracy test as a function of cp parameter during tuning parameters
+
+```{r}
+ggplot(
+  data = result_hyperparam$data,
+  aes(x = cp, y=acc.test.mean)
+) + geom_line(color = 'darkblue') +labs(title="Test accuracy mean per complexity parameter")+
+theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+
+best_parameters_multi = setHyperPars(
+  makeLearner("classif.rpart", predict.type = "prob"), 
+  par.vals = dt_tuneparam$x
+)
+
+result_hyperparam.multi <- generateHyperParsEffectData(dt_tuneparam, partial.dep = TRUE)
+```
+
+Plot of accuracy per parameters' values according to tuning parameters process
+
+```{r}
+full_sample_param<-result_hyperparam.multi$data
+result_sample <- result_hyperparam.multi$data %>%
+  sample_n(nrow(full_sample_param))
+hyperparam.plot <- plot_ly(result_sample, 
+                           x = ~cp, 
+                           y = ~maxdepth, 
+                           z = ~minsplit,
+                           marker = list(color = ~acc.test.mean,  colorscale = list(c(0, 1), c("darkred", "darkgreen")), showscale = TRUE))
+hyperparam.plot <- hyperparam.plot %>% add_markers()
+hyperparam.plot
+```
+
+Run classification decision tree on train set with best max depth and min split parameters' values. We chose cp=0.0004 instead of cp=0.0001 despite it outputs worse accuracy test, because cp=0.0004 enables visualization and interpretation of important predicting variables required in this project. 
+
+```{r}
+# build model according to best parameters 
+model_best_param = rpart(dep_delay~ .,   data=train, method = 'class', control = c(cp=0.0004, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit))
 ```
 
 Visualization of the tree:
 
 ```{r}
-#view results
 
 split.fun <- function(x, labs, digits, varlen, faclen)
 {
@@ -2312,46 +2388,26 @@ split.fun <- function(x, labs, digits, varlen, faclen)
   labs
 }
 
-rpart.plot(class_model, split.fun = split.fun)
+rpart.plot(model_best_param, split.fun = split.fun)
 
 ```
 
-predict
-
-```{r}
-
-predicted_values<- predict(class_model, test, type = 'class')
-accuracy_num<-accuracy(test$dep_delay, predicted_values)
-accuracy_num
-```
-
-view complexity parameter (cp) results and identify best cp to use
-
-```{r}
-printcp(class_model)
-plotcp(class_model)
-```
-
-```{r}
-#ptree<- prune(class_model,
-#              cp= model$cptable[which.min(model$cptable[,"xerror"]),"CP"])
-
-
-#predicted_values_p<- predict(ptree, test, type = 'class')
-#accuracy(test$dep_delay, predicted_values_p)
-
-#cor(predict(rtree.fit, newdata=testData),testData$medv)^2
-#accuracy_num<-accuracy(test$dep_delay, predicted_values_p)
-```
-
-confusion matrix
+Calculate a confusion matrix which shows the number of correct negative predictions, the number of incorrect positive predictions, the number of incorrect negative prediction, and the number of correct positive predictions (Visa, Ramsay, Ralescu, & Van Der Knaap, 2011).
 
 ```{r}
 confusion <- confusionMatrix(predicted_values, test$dep_delay)
 confusion
 ```
 
-plot confusion matrix
+We would like to estimate the accuracy - a metric used in classification problems used to tell the percentage of accurate predictions. Accuracy is calculated by dividing the number of correct predictions by the total number of samples.
+
+```{r}
+predicted_values<- predict(model_best_param, test, type = 'class')
+accuracy_num<-accuracy(test$dep_delay, predicted_values)
+accuracy_num
+```
+
+Plot Confusion Matrix
 
 ```{r}
 plot(confusion$table,
@@ -2360,7 +2416,7 @@ plot(confusion$table,
      main= sprintf('Predicted vs Obsvered confusion matrix with\n accuracy score: %s', round(accuracy_num,3)))
 ```
 
-find important variables
+Find important variables:
 
 ```{r}
 class_model$variable.importance %>%
@@ -2587,3 +2643,6 @@ arXiv [cs.CY], 2017
 Characterization and prediction of air traffic delays
 Rebollo JJ, Balakrishnan H
 Transp. Res. Part C: Emerg. Technol., 2014
+
+Visa, S., Ramsay, B., Ralescu, A. L., & Van Der Knaap, E. (2011). Confusion matrix-based feature selection. MAICS, 710(1), 120-127.
+
