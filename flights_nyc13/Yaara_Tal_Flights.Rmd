@@ -108,6 +108,8 @@ head(flights_full)
 
 ## Exploratory data analysis (EDA) + pre-proccessing analysis
 
+In order to calculate the Pearson correlation, certain assumptions must be met; one of them is that there must be a linear relationship between the variables in question. From observing the scatter plots of the weather parameters vs. the departure delay parameter, there is no linear relationship between these variables. We calculated the Spearman correlation, which does not have these assumptions.
+
 Perform Spearman correlation between weather parameters and flight parameters:
 ```{r}
 numeric_flights_full <-
