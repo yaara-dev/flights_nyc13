@@ -2185,8 +2185,15 @@ ncol(flights_full_arranged)
 
 ```
 
-First, there is a need to balance the dataset because the amount of delays is \~20%
+First, there is a need to balance the dataset because the amount of delays is \~20%.
+Imbalanced data can cause the model to be very good at learning the class that is the majority, but it will not learn to predict the minority class at the same level.
+There are mainly two ways to handle an imbalanced dataset. 
+1. Random oversampling- duplicates examples from the minority class in the training dataset and can result in overfitting for some models.
+2. Random undersampling- delete examples from the majority class and can result in losing information invaluable to a model.
+We are using ovun.sample function from the ROSE package, which creates possibly balanced samples by a combination of random over-sampling minority examples and under-sampling
+majority examples.
 
+This is the data proportion before balancing:
 ```{r echo=FALSE}
 
 set.seed(20)
@@ -2219,6 +2226,7 @@ get_balanced_df <- function(flights_full_arranged) {
  table(balanced_data$dep_delay)
 ```
 
+And this is after balancing the data:
 ```{r echo=FALSE}
 #plot flights counts per 2 dep_delay categories
 ggplot(balanced_data, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
