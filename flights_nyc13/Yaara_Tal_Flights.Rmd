@@ -2427,6 +2427,7 @@ imps_check %>%
   ggtitle('Importance') +
   theme_bw(18)
 ```
+
 ## Discussion
 We pre-processed data to optimize each parameter's potential to be helpful in prediction. We used permutation tests to determine which of the levels in each categorical variable with many levels are significant in predicting delays.
 
