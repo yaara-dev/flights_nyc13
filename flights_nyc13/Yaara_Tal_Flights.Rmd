@@ -262,7 +262,8 @@ flights_full <- transform(
   hour.x = as.numeric(hour.x),
   manufacturer = as.factor(manufacturer),
   month.x = ordered(as.factor(month.x)),
-  month.y = ordered(as.factor(month.y))
+  month.y = ordered(as.factor(month.y)),
+  dest<- as.factor(dest)
 )
 ```
 
@@ -391,8 +392,6 @@ summary(flights_full_arranged)
 
 
 
-
-
 ### Merge manufacturer+model
 
 Merge manufacture and model into manu_model variable - eventually we excluded it from analysis since it is in correlation with model and manufacturer (show the correlation)
@@ -408,28 +407,158 @@ flights_full_arranged$manu_model <- manu_model
 
 ```
 
+### Plots of normalized delayed flights counts per variable's categories
+In order to visually check whether a variable demonstrates variability in delayed flights (in cases when dep_delay=1) we created bar plot for each variable separately, while taking into account the amount of flights in each category. Thus, for each category in a given variable we calculated relative amount of delayed flights out of total flights amount in the current category. Due to this calculation we can compare between the categories.
 
+```{r}
+flights_full_arranged_factors_all<-data.frame(lapply(flights_full_arranged,factor))
+str(flights_full_arranged_factors_all)
+
+gplot_var<-function(var_name, convert_x, palette_a=FALSE){
+  count_df_var<- flights_full_arranged_factors_all %>% group_by(!!(sym(var_name))) %>% summarize(total_count=n())
+  df_var<-flights_full_arranged_factors_all %>% group_by(!!(sym(var_name)), dep_delay) %>% tally() %>% filter(dep_delay==1) 
+  df_var<-merge(df_var, count_df_var, by= var_name)
+  df_var <- df_var %>% mutate(relative_count_1=n/total_count)
+  varX<-paste(var_name,".x", sep="")
+  colnames(df_var)[which(colnames(df_var)==varX)]<-var_name
+  g<-ggplot(data = df_var, mapping = aes_string(x = var_name, y = "relative_count_1", fill = var_name))+ geom_bar(stat="identity", show.legend = FALSE)+
+   labs(fill=var_name, x=var_name, y='Normalized count delayed flights', title= paste("Normalized count delayed flights per category in", var_name))
+  if (convert_x==TRUE){
+    t<- theme(
+      plot.title = element_text(hjust = 0.5,
+                                size = 19,
+                                face = "bold"),
+      axis.text.x = element_text(
+        angle = 90,
+        vjust = 0.5,
+        hjust = 1,
+        size = 6
+      ))
+  } else {
+    t <- theme(
+      plot.title = element_text(hjust = 0.5,
+                                size = 19,
+                                face = "bold"),
+      axis.text.x = element_text(
+        size = 6))}
+  if (!(palette_a==FALSE)){
+    color<-scale_fill_brewer(palette = palette_a)
+    g+t+color
+  } else {
+    g+t
+  }
+}
+
+```
+
+```{r}
+# plot normalized delayed flights in destination variable
+dest_plot<-gplot_var("dest", convert_x=TRUE)                                                                        
+dest_plot
+```
+
+```{r}
+
+# plot normalized delayed flights in model variable
+origin_plot<-gplot_var("origin", convert_x=FALSE, palette_a="PuRd")                                                                    
+origin_plot
+```
+
+```{r}
+# plot normalized delayed flights in month variable
+colnames(flights_full_arranged_factors_all)[which(colnames(flights_full_arranged_factors_all)=="month.x")]<-"month"
+month_plot<-gplot_var("month", convert_x=FALSE)                                                                        
+month_plot
+```
+
+```{r}
+# plot normalized delayed flights in carrier variable
+carrier_plot<-gplot_var("carrier", convert_x=FALSE)                                                                        
+carrier_plot
+```
+
+```{r}
+# plot normalized delayed flights in year variable
+colnames(flights_full_arranged_factors_all)[which(colnames(flights_full_arranged_factors_all)=="year.y")]<-"year"
+year_plot<-gplot_var("year", convert_x=TRUE)                                                                        
+year_plot
+```
+
+```{r}
+# plot normalized delayed flights in type variable
+type_plot<-gplot_var("type", convert_x=FALSE, palette_a="Oranges")                                                                    
+type_plot
+```
+
+```{r}
+# plot normalized delayed flights in manufacturer variable
+manufacturer_plot<-gplot_var("manufacturer", convert_x=TRUE)                                                                        
+manufacturer_plot
+```
+
+```{r}
+# plot normalized delayed flights in model variable
+model_plot<-gplot_var("model", convert_x=TRUE)                                                                        
+model_plot
+```
+
+```{r}
+# plot normalized delayed flights in engines variable
+engines_plot<-gplot_var("engines", convert_x=FALSE, palette_a="BuGn")                                                                  
+engines_plot
+```
+
+```{r}
+# plot normalized delayed flights in visib variable
+visib_plot<-gplot_var("visib", convert_x=FALSE)                                                                        
+visib_plot
+```
+
+```{r}
+# plot normalized delayed flights in tzone variable
+tzone_plot<-gplot_var("tzone", convert_x=TRUE, palette_a="RdPu")                                                                    
+tzone_plot
+```
+
+```{r}
+# plot normalized delayed flights in w_day variable
+w_day_plot<-gplot_var("w_day", convert_x=FALSE, palette_a="YlGn")                                                                     
+w_day_plot
+```
+
+```{r}
+# plot normalized delayed flights in week_num variable
+week_num_plot<-gplot_var("week_num", convert_x=FALSE)                                                                        
+week_num_plot
+```
+
+```{r}
+# plot normalized delayed flights in manu_model variable
+manu_model_plot<-gplot_var("manu_model", convert_x=TRUE)                                                                        
+manu_model_plot
+```
 
 
 ### Categories reduction in factorial variables using permutation test
 
-In order to optimize our model, we decreased the number of categories (levels) in factorial variables that are identified with a large number of categories. This step was performed using the statistical permutation test on each variable separately. Our assumption is that in a particular variable, a category that belonged to a delayed flight, not by chance, should be considered individually in our model since it can indicate the possibility of delay of a future flight related to this category.
-However, a category that repeats on random realizations with the same or even larger prevalence of delayed flights will probably fail to reject the null hypothesis that delayed flights are not over-represented in the current category in the original dataset. The insignificant categories of a variable were combined into one aggregated category.
+In order to optimize our model, we decreased the number of categories (levels) in factorial variables that are identified with a large number of categories. This step was performed using the statistical permutation test on each variable separately. Our assumption is that in a particular variable, a category that belongs to a delayed flights, not by chance, should be considered individually in our model since it can indicate the possibility of delay of a future flight related to this category.
+However, a category that repeats on random realizations with the same or even larger prevalence of delayed flights will probably fail to reject the null hypothesis that delayed flights are not over-represented in the current category in the original dataset. Thus, the insignificant categories of a variable should be combined into one aggregated category.
 
-We performed 2000 realizations of the original dataset; During each realization, we randomly shuffled the departure time delay ('dep_delay') column and counted how many flights labeled as delayed (with dep_delay=1) for each category in each variable separately. Next, we compared it to the original count of departure delayed flights in the particular category.
-The P-value for a given category was calculated as the number of realizations when the count of departure delayed flights was equal to or even higher than the original delayed flight count in this category (plus one), divided by the total number of realizations.
-For example, a permutation analysis p-value of 1e-3 means that the null hypothesis was rejected in all the realizations, suggesting that the specific category is significant in distinguishing delayed flights in the original dataset, using a confidence of 0.005. Finally, the permutation analysis p-value was corrected for multiple testing using the Benjamini-Hochberg procedure.
+We performed 2000 realizations of the original dataset: During each realization, we randomly shuffled the departure time delay ('dep_delay') column and counted how many flights labeled as delayed (with dep_delay=1) for each category in each variable separately. Next, we compared it to the original count of departure delayed flights in the particular category.
+The P-value for a given category was calculated as the number of realizations when the count of departure delayed flights was equal to or even higher than the original delayed flights count in this category (plus one), divided by the total number of realizations.
+For example, a permutation analysis p-value of 1e-3 (in case of 1000 total realizations) means that the null hypothesis was rejected in all the realizations, suggesting that the specific category is significant in distinguishing delayed flights in the original dataset, using a confidence of 0.005. Finally, the permutation analysis p-value was corrected for multiple testing using the Benjamini-Hochberg procedure.
 
 
 We applied this step to several variables:
-  * "model" variable, which included 127 categories, and after the permutation test had only 13 categories.
+* "model" variable, which included 127 categories, and after the permutation test had only 13 categories.
 * "manufacturer" variable, which initially had 35 categories and finally had 4.
 * "manu_model" included 147 categories at the beginning and 12 at the end of the permutation test.
 * "seats" included 48 categories at the beginning and 8 at the end of the permutation test.
 * "dest" variable included at first 100 categories, and after the permutation test had only 52 categories.
 
-We provide in this project the complete output data frames observed from the permutation analysis. There are 5 data frames - each variable has its data frame with the number of realizations (plus one) in which delayed flights count was equal to or higher than the original count for each category.
-We visualized the results for each variable in bar plots representing p-value adjusted values (after Benjamini-Hochberg correction) of each category. A line representing FDR=0.05 is presented on the plot as well in order to emphasize cases (categories) when the null hypothesis was rejected. In addition, we generated plots of total flights in each category to verify whether the results related to the amount in each category
+We provide in this project the complete output data frames observed from the permutation analysis. There are 5 data frames - each variable has its own data frame includes the number of realizations (plus one) in which delayed flights counts was equal to or higher than the original counts for each category.
+We visualized the results for each variable in bar plots representing p-value adjusted values (after Benjamini-Hochberg correction) of each category. A line representing FDR=0.05 is presented on the plot as well in order to emphasize cases (categories) when the null hypothesis was rejected. In addition, we generated plots of total flights in each category to compare p-value results to total amount of flights in each category.
+
 ```{r}
 
 # permutation function

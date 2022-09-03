@@ -151,7 +151,7 @@ if (run_permutations) {
       perm_vec_var
     }
   
-  num_perm <- 500
+  num_perm <- 1000
   for (iter in 1:num_perm) {
     print(iter)
     flights_full_perm <-
