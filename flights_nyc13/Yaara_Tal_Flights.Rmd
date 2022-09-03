@@ -153,7 +153,7 @@ grid.arrange(grobs = plot_list, ncol = 3)
 ```
 
 
-we would like to examine correlation between numeric variables. 
+We would like to examine correlation between numeric variables. 
 In order to calculate Pearson correlation, certain assumptions must be met; one of them is that there must be a linear relationship between the variables. Observing the scatter plots above, we can see there is no linear relationship between those numeric variables. 
 Thus, we chose to apply Spearman correlation test, which does not require linear relationship assumptions.
 
@@ -387,9 +387,13 @@ flights_full_arranged <-
 str(flights_full_arranged)
 ```
 
-### Merge Manufacturer + Model Variables
+### Combine 'manufacturer' and 'model' Variables
 
-We found that part of model planes' were repeated in several manufacturers. It means that when two planes share the same model name but different manufacturers, they are Not actually recognized by exactly the same model. As a result, we decided to combine 'manufacturer' and 'model' columns into one column named 'manu_model' with the aim of reducing the amount of variables in the dataset.
+We wanted to check whether the variable 'model' is a unique variable. That is, there are no model names that appear under two different manufacturers. Our examination revealed that a small number of models whose names are not unique and appear with two different manufacturers.
+To overcome this problem, we decided to combine 'manufacturer' and 'model' columns into one column named 'manu_model' with the aim of reducing the amount of variables in the dataset. The manu-model column contains unique names for each model because each model is coupled to its manufacturer's name.
+
+Later we checked whether this variable has priority over the manufacturer variable, and we saw that the variable is equivalent and, in some cases, even takes on higher importance in the models we run. Therefore, we will delete the 'model' and 'manufacturer' columns and leave the 'manu-model' column containing both information.
+
 
 ```{r}
 # show in how many different manufacturers each model presented
@@ -399,6 +403,7 @@ table_manufacturer_model[table_manufacturer_model>1] # models' prevalence in dif
 
 ```
 # merge manufacturer and model columns into one column
+```{r}
 manu_model <-
   paste(flights_full_arranged$manufacturer,
         flights_full_arranged$model,
