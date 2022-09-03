@@ -579,7 +579,7 @@ c
 ```
 
 ### Plot Multiple Variables
-We have seen that overall there isn't one particular variable that has an obvious direct relationship to the departure delay. The purpose of the next plot is to examine the option of multiple variables together having a more clear relation to the departure delay.
+We have seen that overall there is not one particular variable that has an apparent direct relationship to the departure delay. The following plot aims to examine the option of multiple variables together having a more apparent relation to the departure delay.
 
 ```{r}
 wind_dir_df<- flights_full_arranged %>% group_by(origin, wind_dir) %>% summarize(total_count=n(), mean_speed = mean(wind_speed))
