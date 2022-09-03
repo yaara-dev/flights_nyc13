@@ -943,7 +943,7 @@ flights_full_arranged$manu_model <-
 levels(flights_full_arranged$manu_model)
 ```
 
-change manu_model column into  one-letter categories
+Change manu_model column into  one-letter categories
 ```{r}
 flights_full_arranged_bf_change <- flights_full_arranged
 manu_model_levels_after_change <-
@@ -964,7 +964,7 @@ flights_full_arranged$manu_model <-
 levels(flights_full_arranged$manu_model)
 ```
 
-change destination levels in flights_full_arranged
+Change destination levels in flights_full_arranged
 ```{r}
 flights_full_arranged$dest <-
   as.character(flights_full_arranged$dest)
