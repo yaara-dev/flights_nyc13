@@ -107,11 +107,11 @@ head(flights_full)
 
 ```
 
-## Exploratory data analysis (EDA) + pre-proccessing analysis
+## Exploratory data analysis (EDA) and Pre-Proccessing Analysis
 
-In order to predict successfully a delayed flight we would like to use most affecting features/variables in our model and avoid from features that may increase noise. Achieving this goal requires pre-processing steps in which we reduce the number of variables and the number of levels/categories in variables.
+In order to successfully predict a delayed flight we would like to use the most affecting features/variables in our model and avoid features that may increase noise. Achieving this goal requires pre-processing steps in which we reduce the number of variables and the number of levels/categories in variables.
 
-First, we plotted weather variables vs. departure delay in order to visually spot if there is a linear relationship between them. On top of the scatter plot there is a linear model fit line:
+First, we plotted numeric variables vs. departure delay in order to visually spot if there is a linear relationship between them. On top of the scatter plot there is a linear model fit line:
 
 ```{r}
 plot_var_vs_dep_delay <-
