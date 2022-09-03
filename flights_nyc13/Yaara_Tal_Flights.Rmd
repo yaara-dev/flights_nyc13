@@ -385,7 +385,7 @@ str(flights_full_arranged)
 
 ### Combine 'manufacturer' and 'model' Variables
 
-We wanted to check whether the variable 'model' is a unique variable. That is, there are no model names that appear under two different manufacturers. Our examination revealed that a small number of models whose names are not unique and appear with two different manufacturers.
+We wanted to check whether the variable 'model' is a unique variable. That is, there are no model names that appear under two different manufacturers. Our examination revealed a small number of models whose names are not unique and appear under two different manufacturers.
 To overcome this problem, we decided to combine 'manufacturer' and 'model' columns into one column named 'manu_model' with the aim of reducing the amount of variables in the dataset. The manu-model column contains unique names for each model because each model is coupled to its manufacturer's name.
 
 Later we checked whether this variable has priority over the manufacturer variable, and we saw that the variable is equivalent and, in some cases, even takes on higher importance in the models we run. Therefore, we will delete the 'model' and 'manufacturer' columns and leave the 'manu-model' column containing both information.
