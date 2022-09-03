@@ -178,11 +178,6 @@ The variables 'dewp' and 'temp' are highly correlated (0.9), so are 'wind_speed'
 
 We edited some of the columns in our dataset in order to improve their potential contribution to the prediction:
 
-Save original data before processing##todo- erase line when done!
-
-```{r}
-flights_full_old <- flights_full
-```
 
 Convert hours column to minutes
 
