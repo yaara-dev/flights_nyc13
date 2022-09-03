@@ -476,19 +476,22 @@ gplot_var <- function(var_name, convert_x, palette_a = FALSE) {
 
 ```
 
+Destination
 ```{r}
 # plot normalized delayed flights in destination variable
 dest_plot<-gplot_var("dest", convert_x=TRUE)                                                                        
 dest_plot
 ```
 
+Origin Airport
 ```{r}
 
-# plot normalized delayed flights in model variable
+# plot normalized delayed flights in origin variable
 origin_plot<-gplot_var("origin", convert_x=FALSE, palette_a="PuRd")                                                                    
 origin_plot
 ```
 
+Month
 ```{r}
 # plot normalized delayed flights in month variable
 colnames(flights_full_arranged_factors_all)[which(colnames(flights_full_arranged_factors_all)=="month.x")]<-"month"
@@ -496,12 +499,14 @@ month_plot<-gplot_var("month", convert_x=FALSE)
 month_plot
 ```
 
+Carrier (airline)
 ```{r}
 # plot normalized delayed flights in carrier variable
 carrier_plot<-gplot_var("carrier", convert_x=FALSE)                                                                        
 carrier_plot
 ```
 
+Year of Manufacture
 ```{r}
 # plot normalized delayed flights in year variable
 colnames(flights_full_arranged_factors_all)[which(colnames(flights_full_arranged_factors_all)=="year.y")]<-"year"
@@ -509,60 +514,70 @@ year_plot<-gplot_var("year", convert_x=TRUE)
 year_plot
 ```
 
+Engine Type
 ```{r}
 # plot normalized delayed flights in type variable
 type_plot<-gplot_var("type", convert_x=FALSE, palette_a="Oranges")                                                                    
 type_plot
 ```
 
+Manufacture
 ```{r}
 # plot normalized delayed flights in manufacturer variable
 manufacturer_plot<-gplot_var("manufacturer", convert_x=TRUE)                                                                        
 manufacturer_plot
 ```
 
+Model
 ```{r}
 # plot normalized delayed flights in model variable
 model_plot<-gplot_var("model", convert_x=TRUE)                                                                        
 model_plot
 ```
 
+Number of Engines
 ```{r}
 # plot normalized delayed flights in engines variable
 engines_plot<-gplot_var("engines", convert_x=FALSE, palette_a="BuGn")                                                                  
 engines_plot
 ```
 
+Visibility
 ```{r}
 # plot normalized delayed flights in visib variable
 visib_plot<-gplot_var("visib", convert_x=FALSE)                                                                        
 visib_plot
 ```
 
+Time Zone
 ```{r}
 # plot normalized delayed flights in tzone variable
 tzone_plot<-gplot_var("tzone", convert_x=TRUE, palette_a="RdPu")                                                                    
 tzone_plot
 ```
 
+Week Day
 ```{r}
 # plot normalized delayed flights in w_day variable
 w_day_plot<-gplot_var("w_day", convert_x=FALSE, palette_a="YlGn")                                                                     
 w_day_plot
 ```
 
+Week Number
 ```{r}
 # plot normalized delayed flights in week_num variable
 week_num_plot<-gplot_var("week_num", convert_x=FALSE)                                                                        
 week_num_plot
 ```
 
+Manu- Model
 ```{r}
 # plot normalized delayed flights in manu_model variable
 manu_model_plot<-gplot_var("manu_model", convert_x=TRUE)                                                                        
 manu_model_plot
 c
 ```
+
 ### Plot Multiple Variables
 We have seen that overall there isn't one particular variable that has an obvious direct relationship to the departure delay. The purpose of the next plot is to examine the option of multiple variables together having a more clear relation to the departure delay.
 
