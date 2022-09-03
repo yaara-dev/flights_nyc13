@@ -174,7 +174,7 @@ Plot the correlation heatmap
 cor.plot(cor_test_mat$r, main = "Correlation Matrix (spearman)", stars = TRUE, xlas = 2)
 ```
 
-dewp and temp are highly correlated (0.9), so are wind speed and wind gust (0.87), and air time and distance (0.98).The correlation is significant (pval\<0.05) We decided to remove dewp, air time, and wind gust to avoid double variables in the model. All three variables are an outcome in some way of the variable they are highly correlated to.
+The variables 'dewp' and 'temp' are highly correlated (0.9), so are 'wind_speed' and 'wind_gust' (0.87), and 'air_time' and 'distance' (0.98).The correlation is significant (pval\<0.05) We decided to remove 'dewp', 'air_time', and 'wind_gust' to avoid double variables in the model. All three variables are logically an outcome of the variable they are highly correlated to.
 
 We edited some of the columns in our dataset in order to improve their potential contribution to the prediction:
 
