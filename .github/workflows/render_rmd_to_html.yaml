@@ -17,7 +17,8 @@ jobs:
         run: Rscript -e 'install.packages("rmarkdown")'
       - name: Render README
         run: Rscript -e "rmarkdown::render('flights_nyc13/Yaara_Tal_Flights.Rmd', output_format = 'md_document',output_dir='./',output_file='README.md')"
-      - name: Commit results
-        run: |
-          git commit -a -m 'Re-build flights_nyc13/Yaara_Tal_Flights.Rmd' || echo "No changes to commit"
-          git push origin || echo "No changes to commit"
+      - name: Commit README.md
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'Auto Commit Update README'
+          add: '. --force'
