@@ -397,7 +397,9 @@ table_manufacturer_model<-table(manufacturer_model_df$model)
 table_manufacturer_model[table_manufacturer_model>1] # models' prevalence in different manufacturers
 
 ```
-# merge manufacturer and model columns into one column
+
+Combine manufacturer and model columns into one column
+
 ```{r}
 manu_model <-
   paste(flights_full_arranged$manufacturer,
