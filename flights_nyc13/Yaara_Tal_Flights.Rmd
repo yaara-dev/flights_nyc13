@@ -143,7 +143,7 @@ grid.arrange(grobs = plot_list, ncol = 3)
 
 ```
 
-In order to calculate the Pearson correlation, certain assumptions must be met; one of them is that there must be a linear relationship between the variables in question. From observing the scatter plots of the weather parameters vs. the departure delay parameter, there is no linear relationship between these variables. We calculated the Spearman correlation, which does not have these assumptions.
+In order to calculate the Pearson correlation, certain assumptions must be met; one of them is that there must be a linear relationship between the variables in question. From observing the scatter plots of the weather parameters vs. the departure delay parameter, there is no linear relationship between these variables. We calculated the Spearman correlation, which does not require these assumptions.
 
 Perform Spearman correlation between weather parameters and flight parameters:
 
@@ -283,7 +283,7 @@ length(which(is.na(flights_full$speed)))
 length(which(is.na(flights_full$wind_gust)))
 ```
 
-### Dividing departure delay variable into 2 categories - 'delay' vs. 'no delay'
+### Dividing Departure Delay Variable into 2 Categories - 'delay' vs. 'no delay'
 
 Since we would like to predict if a particular flight will be delayed, we logically selected a threshold indicating a significant delay on time - 20 minutes.
 
