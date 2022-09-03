@@ -1,6 +1,6 @@
 ---
 title: "Prediction of flight departure delays"
-author: "Yaara Diamant Karasik & Tal Goldberg YOEL"
+author: "Yaara Diamant Karasik & Tal Goldberg"
 date: "2022-09-04"
 output: html_document
 ---
