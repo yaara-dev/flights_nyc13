@@ -19,8 +19,11 @@ jobs:
       - uses: actions/checkout@v2
 
       - uses: r-lib/actions/setup-r@master
+      
+      - name: Install RMarkDown
+        run: install.packages("rmarkdown", dep = TRUE)
+        shell: Rscript {0}
 
       - name: Build Rmd
-
-        run: "rmarkdown::render('flights_nyc13/Yaara_Tal_Flights.Rmd',params=list(args = myarg))"
-        shell: Rscript -e {0}
+        run: -e "rmarkdown::render('flights_nyc13/Yaara_Tal_Flights.Rmd',params=list(args = myarg))"
+        shell: Rscript {0}
