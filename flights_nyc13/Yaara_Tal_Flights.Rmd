@@ -20,8 +20,7 @@ This project aims to generate a prediction model of departure delay time. A reli
 
 
 Our analysis is based on the public flights dataset taken from the "nycflights13" R package. This package contains information about all flights that departed from NYC in 2013. We used additional datasets from the same package, such as 'planes', 'weather', and 'airport'. These datasets provide extensive information about the flights. 
-'planes' dataset contains construction information about each plane and was merged with the 'flights' dataset by the common variable column "tailnum". 
-'weather' dataset, which includes hourly meteorological data for each airport, was merged with 'flights' according to the "origin" and "time_hour" variable columns.
+'planes' dataset contains construction information about each plane and was merged with the 'flights' dataset by the common variable column "tailnum". 'weather' dataset, which includes hourly meteorological data for each airport, was merged with 'flights' according to the "origin" and "time_hour" variable columns.
 Similarly, the 'airports' dataset, which represents all involved airports and their locations, was merged with 'flights' by "faa"(="dest") variable column.
 The merged dataset contains 47 variables and 276688 observations.
 
@@ -109,9 +108,9 @@ head(flights_full)
 
 ## Exploratory data analysis (EDA) + pre-proccessing analysis
 
-In order to predict successfully a delayed flight we would like to use most affecting features/variables in our model and avoid from features that may increase noise. Achieving this goal requires pre-processing steps in which we reduce the number of variables and the number of levels/categories in variables.
+In order to predict successfully a delayed flight we would like to use most affecting features (variables) in our model and avoid from features that may increase noise. Achieving this goal requires pre-processing steps in which we reduce the number of variables and the number of levels/categories in variables.
 
-First, we plotted weather variables vs. departure delay in order to visually spot if there is a linear relationship between them. On top of the scatter plot there is a linear model fit line:
+First, we plotted numeric variables vs. departure delay variable in order to visually spot if there is a linear relationship between them. On top of the scatter plot there is a linear model fit line:
 
 ```{r}
 plot_var_vs_dep_delay <-
@@ -153,11 +152,12 @@ grid.arrange(grobs = plot_list, ncol = 3)
 ```
 
 
-we would like to examine correlation between numeric variables. 
-In order to calculate Pearson correlation, certain assumptions must be met; one of them is that there must be a linear relationship between the variables. Observing the scatter plots above, we can see there is no linear relationship between those numeric variables. 
+We would like to examine a correlation between numeric variables. 
+In order to calculate Pearson correlation, certain assumptions must be met, one of them is that there must be a linear relationship between the variables. Observing the scatter plots above, we can see there is no linear relationship between those numeric variables. 
 Thus, we chose to apply Spearman correlation test, which does not require linear relationship assumptions.
 
-Thus, we perform Spearman correlation test between numerical variables in the dataset::
+Spearman correlation test between numerical variables in the datase:
+
 ```{r}
 cor_test_mat <- corr.test(numeric_flights_full, method = "spearman")  
 #r
@@ -167,7 +167,7 @@ cor_test_mat$p
 
 ```
 
-Plot the correlation heatmap
+Plot of correlation heatmap:
 
 ```{r}
 #plot the correlation matrix
@@ -2154,17 +2154,21 @@ flights_full_arranged_25$seats <-
 
 ## Inference
 
-### Data Balancing
+### Removing Irrelevant Predicting Variables
 
-We decided to exclude manu_model from model analysis since there is a correlation between manu_model and model manufacturer - show test/statistical proves!
+We decided to exclude 'model' and 'manufacturer' variables from our model analysis and instead we took into account the 'manu_model' variable. As we discussed above we combined models and manufacturers into one column represnting unique models according to their manufacturer. This step prevented future mistakenly grouping of planes with identical model name but different manufacturer.
+As we prefer to reduce number of predicting variables in our model to prevent confusion we removed 'model' and 'manufacturer', and let the model basing on 'mau_model' variable.
+
 ```{r echo=FALSE}
 
-flights_full_arranged<-flights_full_arranged %>% select(-c(manu_model))
+flights_full_arranged<-flights_full_arranged %>% select(-c(model, manufacturer))
 ncol(flights_full_arranged)
 
 ```
 
-First, there is a need to balance the dataset because the amount of delays is \~20%
+###Data Balancing
+
+We should balance the dataset because the amount of delays is \~20%
 
 ```{r echo=FALSE}
 
@@ -2244,19 +2248,91 @@ test_25 <- train_test_split(balanced_data_25)[[2]]
 ```
 
 ### Classification Decision Tree
-
-Run classification decision tree on train set
+First, we would like to choose best parameters for optimizing model's prediction. Thus, we will use 'mlr' package 
 
 ```{r}
+train_df<-as.data.frame(train)
+test_df<-as.data.frame(test)
 
-class_model <- rpart(dep_delay ~. , data=train, method = 'class',control= rpart.control(cp=0.0004, maxdepth = 26, minsplit = 18))
-#summary(class_model)
+model.mlr <- makeClassifTask(
+  data=train_df, 
+  target="dep_delay"
+)
+
+# Search Parameter for Max Depth
+param_grid <- makeParamSet( 
+  makeDiscreteParam("maxdepth", values=seq(20,30, by=3)),
+  makeDiscreteParam("cp", values=seq(0.0001, 0.0006, by=0.0002)),
+  makeDiscreteParam("minsplit", values=seq(15,25, by=3))
+)
+
+# Define Grid
+control_grid = makeTuneControlGrid()
+
+# Define Cross Validation
+resample = makeResampleDesc("CV", iters = 3L)
+
+# Define Measure
+measure = acc
+
+#set.seed(123) 
+dt_tuneparam <- tuneParams(learner='classif.rpart', 
+                           task=model.mlr, 
+                           resampling = resample,
+                           measures = measure,
+                           par.set=param_grid, 
+                           control=control_grid, 
+                           show.info = TRUE)
+
+dt_tuneparam
+
+result_hyperparam <- generateHyperParsEffectData(dt_tuneparam, partial.dep = TRUE)
+```
+
+plot of mean accuracy test as a function of cp parameter during tuning parameters
+
+```{r}
+ggplot(
+  data = result_hyperparam$data,
+  aes(x = cp, y=acc.test.mean)
+) + geom_line(color = 'darkblue') +labs(title="Test accuracy mean per complexity parameter")+
+theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+
+best_parameters_multi = setHyperPars(
+  makeLearner("classif.rpart", predict.type = "prob"), 
+  par.vals = dt_tuneparam$x
+)
+
+result_hyperparam.multi <- generateHyperParsEffectData(dt_tuneparam, partial.dep = TRUE)
+```
+
+Plot of accuracy per parameters' values according to tuning parameters process
+
+```{r}
+full_sample_param<-result_hyperparam.multi$data
+result_sample <- result_hyperparam.multi$data %>%
+  sample_n(nrow(full_sample_param))
+hyperparam.plot <- plot_ly(result_sample, 
+                           x = ~cp, 
+                           y = ~maxdepth, 
+                           z = ~minsplit,
+                           marker = list(color = ~acc.test.mean,  colorscale = list(c(0, 1), c("darkred", "darkgreen")), showscale = TRUE))
+hyperparam.plot <- hyperparam.plot %>% add_markers()
+hyperparam.plot
+```
+
+Run classification decision tree on train set with best max depth and min split parameters' values. We chose cp=0.0004 instead of cp=0.0001 despite it outputs worse accuracy test, because cp=0.0004 enables visualization and interpretation of important predicting variables required in this project. 
+
+```{r}
+# build model according to best parameters 
+model_best_param = rpart(dep_delay~ .,   data=train, method = 'class', control = c(cp=0.0004, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit))
 ```
 
 Visualization of the tree:
 
 ```{r}
-#view results
+# visualization
 library(rattle)
 split.fun <- function(x, labs, digits, varlen, faclen)
 {
@@ -2269,46 +2345,26 @@ split.fun <- function(x, labs, digits, varlen, faclen)
   labs
 }
 
-rpart.plot(class_model, split.fun = split.fun)
+rpart.plot(model_best_param, split.fun = split.fun)
 
 ```
 
-predict
-
-```{r}
-
-predicted_values<- predict(class_model, test, type = 'class')
-accuracy_num<-accuracy(test$dep_delay, predicted_values)
-accuracy_num
-```
-
-view complexity parameter (cp) results and identify best cp to use
-
-```{r}
-printcp(class_model)
-plotcp(class_model)
-```
-
-```{r}
-#ptree<- prune(class_model,
-#              cp= model$cptable[which.min(model$cptable[,"xerror"]),"CP"])
-
-
-#predicted_values_p<- predict(ptree, test, type = 'class')
-#accuracy(test$dep_delay, predicted_values_p)
-
-#cor(predict(rtree.fit, newdata=testData),testData$medv)^2
-#accuracy_num<-accuracy(test$dep_delay, predicted_values_p)
-```
-
-confusion matrix
+Calculate a confusion matrix which shows the number of correct negative predictions, the number of incorrect positive predictions, the number of incorrect negative prediction, and the number of correct positive predictions (Visa, Ramsay, Ralescu, & Van Der Knaap, 2011).
 
 ```{r}
 confusion <- confusionMatrix(predicted_values, test$dep_delay)
 confusion
 ```
 
-plot confusion matrix
+We would like to estimate the accuracy - a metric used in classification problems used to tell the percentage of accurate predictions. Accuracy is calculated by dividing the number of correct predictions by the total number of samples.
+
+```{r}
+predicted_values<- predict(model_best_param, test, type = 'class')
+accuracy_num<-accuracy(test$dep_delay, predicted_values)
+accuracy_num
+```
+
+Plot Confusion Matrix
 
 ```{r}
 plot(confusion$table,
@@ -2317,7 +2373,7 @@ plot(confusion$table,
      main= sprintf('Predicted vs Obsvered confusion matrix with\n accuracy score: %s', round(accuracy_num,3)))
 ```
 
-find important variables
+Find important variables:
 
 ```{r}
 class_model$variable.importance %>%
@@ -2527,3 +2583,8 @@ We converted the variable dep_delay from a delay in minutes to a binary variable
 In the first step, we ran a decision tree model. This model reached an accuracy level of about 70% in delay prediction. In the second step, we wanted to check whether a Random Forest model could learn the data better and give a more accurate prediction. We thought this model would be better because #add explanation. The Random Forest model reached a much higher level of accuracy than the decision tree, 98%. In principle, the chance of an overfit in Random Forest is low thanks to bagging and random feature selection, they are trained independently on different subsets of the training data. However, the high accuracy score raises our concern that the model may overfit the data. In order to examine the matter, we performed another run of the Random Forest model where in this run, we limited the depth of the trees and increased the number of trees (from 1000 to 2000). The result of this run showed 94% accuracy, which is still high but is very unlikely to be overfitted to the large number of trees and the limitation of the trees' depth. Further, model is highly accurate for the test as well, so on the one hand, it may be just excellent at predicting. Another possible explanation is that there is indeed an overfit resulting from the fact that the training and the test are similar since they were taken from the same data set.
 
 In conclusion, we have shown that it is possible to predict if there will be a delay in takeoff with a high probability using a random forest model that considers various parameters related to weather, aircraft characteristics, airport, destination, airlines, etc. For further research, it is worthwhile to implement the model on current databases for two reasons; The first is to verify the model and see that it is not adjusted only for 2013. Second, since the Corona epidemic, the world of flights has changed, i.e., the airlines have changed partly due to bankruptcies of low-cost companies, and the loads at the airport have changed as well.
+
+
+#### References
+
+* Visa, S., Ramsay, B., Ralescu, A. L., & Van Der Knaap, E. (2011). Confusion matrix-based feature selection. MAICS, 710(1), 120-127.
