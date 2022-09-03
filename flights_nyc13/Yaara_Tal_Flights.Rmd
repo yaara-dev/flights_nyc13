@@ -52,7 +52,8 @@ list.of.packages <-
     "Metrics",
     "mlr",
     "plotly",
-    "caTools"
+    "caTools",
+    "psych"
   )
 
 new.packages <-
@@ -81,6 +82,7 @@ library(Metrics)
 library(mlr)
 library(plotly)
 library(caTools)
+library(psych)
 flights <- flights
 airports <- airports
 planes <- planes
@@ -107,28 +109,66 @@ head(flights_full)
 ```
 
 ## Exploratory data analysis (EDA) + pre-proccessing analysis
+Plot the weather variables vs. the departure delay to see if we can visually spot variables that have a relationship with the departure delay. On top of the scatter plot there is a linear model fit line:
+```{r}
+plot_var_vs_dep_delay <-
+  function(var_name, df = numeric_flights_full){
+     p<-ggplot(data = df, mapping = aes(x = get(var_name), y = dep_delay)) +
+      geom_point(alpha = 0.2) +
+      geom_smooth(method = "lm") +
+      labs(
+        x = sprintf("%s", var_name),
+        y = "Departure delay (min)",
+        title = sprintf("%s vs departure delay", var_name))
+    return(list(p))
+}
+
+numeric_vars <- c(
+  'sched_dep_time',
+  'dep_delay',
+  'arr_delay',
+  'distance',
+  'air_time',
+  'temp',
+  'wind_dir',
+  'wind_speed',
+  'wind_gust',
+  "precip",
+  "pressure",
+  "visib",
+  "humid",
+  "dewp"
+)
+
+plot_list <- list()
+for(var in numeric_vars){
+  p <- plot_var_vs_dep_delay(var_name = var)
+  plot_list <- append(plot_list,p)
+  
+}
+grid.arrange(plot_list[[1]],
+             plot_list[[3]],
+             plot_list[[4]],
+             plot_list[[5]],
+             plot_list[[6]],
+             plot_list[[7]],
+             plot_list[[8]],
+             plot_list[[9]],
+             plot_list[[10]],
+             plot_list[[11]],
+             plot_list[[12]],
+             plot_list[[13]],
+             plot_list[[14]],
+             ncol = 3)
+
+```
 
 In order to calculate the Pearson correlation, certain assumptions must be met; one of them is that there must be a linear relationship between the variables in question. From observing the scatter plots of the weather parameters vs. the departure delay parameter, there is no linear relationship between these variables. We calculated the Spearman correlation, which does not have these assumptions.
 
 Perform Spearman correlation between weather parameters and flight parameters:
 ```{r}
 numeric_flights_full <-
-  flights_full[, c(
-    'sched_dep_time',
-    'dep_delay',
-    'arr_delay',
-    'distance',
-    'air_time',
-    'temp',
-    'wind_dir',
-    "wind_speed",
-    "precip",
-    "pressure",
-    "visib",
-    "humid",
-    "dewp"
-    )
-  ]
+  flights_full[,numeric_vars]
 cor_test_mat <- corr.test(numeric_flights_full, method = "spearman")  
 #r
 cor_test_mat$r
