@@ -53,8 +53,6 @@ new.packages <-
 if (length(new.packages)) {
   install.packages(new.packages)
 }
-suppressWarnings(suppressMessages(library(dplyr)))
-
 
 library(dataPreparation)
 library(nycflights13)
