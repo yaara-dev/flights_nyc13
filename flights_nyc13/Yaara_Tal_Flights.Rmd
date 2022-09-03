@@ -413,7 +413,7 @@ flights_full_arranged$manu_model <- manu_model
 ```
 
 ### Plots of normalized delayed flights counts per variable's categories
-In order to visually check whether a variable demonstrates variability in delayed flights (in cases when dep_delay=1) we created bar plot for each variable separately, while taking into account the amount of flights in each category. Thus, for each category in a given variable we calculated relative amount of delayed flights out of total flights amount in the current category. Due to this calculation we can compare between the categories.
+In order to visually check whether a variable demonstrates variability in delayed flights (in cases when dep_delay=1), we created a bar plot for each variable separately while considering the number of flights in each category. Thus, for each category in a given variable we calculated the relative amount of delayed flights out of total flights in the current category. Due to this calculation, we can compare the categories.
 
 ```{r}
 flights_full_arranged_factors_all <-
