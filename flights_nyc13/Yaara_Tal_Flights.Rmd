@@ -12,16 +12,19 @@ knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
 
 ## Introduction
 
-Flight delays are a significant societal problem as they impair airlines, transport companies, air traffic controllers, facility managers, and passengers. Studying flight data is an essential activity for every player involved in the air transportation system. Given the uncertainty of delays, passengers usually plan to travel many hours earlier for their appointments. They might have to increase their travel costs to arrive on time. Airlines suffer penalties, fines, and additional operation costs, such as airport crew and aircraft retention. Regarding sustainability, delays may also increase environmental issues due to increased fuel consumption and gas emissions (Rebollo & Balakrishnan, 2014; Sternberg et al., 2017;Carvalho et al., 2021)).
+Flight delays are a significant societal problem as they impair airlines, transport companies, air traffic controllers, facility managers, and passengers. Studying flight data is an essential activity for every player involved in the air transportation system. Given the uncertainty of delays, passengers usually plan to travel many hours earlier for their appointments. They might have to increase their travel costs to arrive on time. Airlines suffer penalties, fines, and additional operation costs, such as airport crew and aircraft retention. Regarding sustainability, delays may also increase environmental issues due to increased fuel consumption and gas emissions (Rebollo & Balakrishnan, 2014; Sternberg et al., 2017;Carvalho et al., 2021).
 
-This project aims to generate a prediction model of departure delay time. A reliable prediction will benefit airports and airlines, passengers, and global environmental sustainability. 
+This project aims to generate a prediction model of departure delay time. A reliable prediction will benefit airports, airlines, passengers, and global environmental sustainability. 
 
 
 ## Data
 
 
-Our analysis is based on public flights dataset taken from "nycflights13" R package. This package contains information about all flights that departed from NYC at 2013. We used additional datasets, such as 'planes', 'weather' and 'airport', from current package which provide extensive information about the flights. 'planes' dataset containes a construction information about each plane, and was merged with 'flights' dataset by the common variable column "tailnum". 'weather' dataset which includes hourly meterological data for each airport, eas merged with 'flights' according to "origin" and "time_hour" variable columns. Similarly, airports dataset which represents all involved airports and their locations, was merged with 'flights' by "faa"(="dest") variable column.
-The merged dataset containes 47 variables and 276688 observations.
+Our analysis is based on the public flights dataset taken from the "nycflights13" R package. This package contains information about all flights that departed from NYC in 2013. We used additional datasets from the same package, such as 'planes', 'weather', and 'airport'. These datasets provide extensive information about the flights. 
+'planes' dataset contains construction information about each plane and was merged with the 'flights' dataset by the common variable column "tailnum". 
+'weather' dataset, which includes hourly meteorological data for each airport, was merged with 'flights' according to the "origin" and "time_hour" variable columns.
+Similarly, the 'airports' dataset, which represents all involved airports and their locations, was merged with 'flights' by "faa"(="dest") variable column.
+The merged dataset contains 47 variables and 276688 observations.
 
 
 
