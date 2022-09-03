@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+.RDataTmp
 .temp
 .old_output
 flights_nyc13/Figs
