@@ -1,0 +1,26 @@
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+name: Build Rmd
+
+jobs:
+  build:
+    runs-on: macOS-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: r-lib/actions/setup-r@master
+
+      - name: Build Rmd
+
+        run: "rmarkdown::render('flights_nyc13/Yaara_Tal_Flights.Rmd',params=list(args = myarg))"
+        shell: Rscript -e {0}
