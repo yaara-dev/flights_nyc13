@@ -11,19 +11,11 @@ name: Build Rmd
 
 jobs:
   build:
-    runs-on: macOS-latest
-    env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-
-      - uses: r-lib/actions/setup-r@master
-      
-      - name: Install RMarkDown
-        run: install.packages("rmarkdown", dep = TRUE)
-        shell: Rscript {0}
-
-      - name: Build Rmd
-        run: -e "rmarkdown::render('flights_nyc13/Yaara_Tal_Flights.Rmd',params=list(args = myarg))"
-        shell: Rscript {0}
+      - name: Set up Git repository
+        uses: actions/checkout@v2
+      - name: Render document
+        uses: lc5415/rmarkdown-action@v1
+        with:
+          input_file: flights_nyc13/Yaara_Tal_Flights.Rmd
