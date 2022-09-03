@@ -75,16 +75,17 @@ library(ranger)
 library(ROSE)
 library(caret)
 library(rpart)
+library(rattle)
 library(rpart.plot)
 library(Metrics)
 library(mlr)
 library(plotly)
 library(caTools)
 library(psych)
-flights <- flights
-airports <- airports
-planes <- planes
-weather <- weather
+flights <- nycflights13::flights
+airports <- nycflights13::airports
+planes <- nycflights13::planes
+weather <- nycflights13::weather
 ```
 
 ```{r}
@@ -2299,7 +2300,7 @@ Visualization of the tree:
 
 ```{r}
 #view results
-library(rattle)
+
 split.fun <- function(x, labs, digits, varlen, faclen)
 {
   # replace commas with spaces (needed for strwrap)
