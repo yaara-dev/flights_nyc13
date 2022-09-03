@@ -16,7 +16,7 @@ jobs:
       - name: Install rmarkdown
         run: Rscript -e 'install.packages("rmarkdown")'
       - name: Render README
-        run: Rscript -e 'rmarkdown::render("flights_nyc13/Yaara_Tal_Flights.Rmd", output_format = "md_document",output_dir='./',output_file='README.md')'
+        run: Rscript -e "rmarkdown::render('flights_nyc13/Yaara_Tal_Flights.Rmd', output_format = 'md_document',output_dir='./',output_file='README.md')"
       - name: Commit results
         run: |
           git add README.md
