@@ -2536,7 +2536,7 @@ grid.arrange(p2, p3, ncol = 2)
 Check for overfit with twice the number of trees and a limited depth for the trees:
 
 ```{r}
-rf_check <- run_random(train, ntrees = 2000)
+rf_check <- run_random(train, ntrees = 2000, depth = 20)
 pred_check <- predict(rf_check, test)
 confusion_check <- table(test$dep_delay, pred_check$predictions)
 confusionMatrix(confusion_check)
@@ -2562,6 +2562,7 @@ imps_check %>%
 ```
 
 ## Discussion
+
 We pre-processed the data to optimize each parameter's potential to be helpful in prediction. We used permutation tests to determine which of the levels in each categorical variable with many levels are significant in predicting delays.
 
 We converted the variable dep_delay from a delay in minutes to a binary variable. 0- no delay, 1- there is a delay. The division was made based on a threshold of late minutes. In order to test the sensitivity to this threshold, we created two more datasets, one with a higher threshold and one with a lower threshold, and ran the prediction models on these two datasets. In both models, decision tree and random forest, there were no differences between the primary dataset and the datasets created for sensitivity testing.
