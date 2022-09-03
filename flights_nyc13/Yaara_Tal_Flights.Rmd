@@ -157,7 +157,7 @@ We would like to examine correlation between numeric variables.
 In order to calculate Pearson correlation, certain assumptions must be met; one of them is that there must be a linear relationship between the variables. Observing the scatter plots above, we can see there is no linear relationship between those numeric variables. 
 Thus, we chose to apply Spearman correlation test, which does not require linear relationship assumptions.
 
-Thus, we perform Spearman correlation test between numerical variables in the dataset::
+Thus, we perform Spearman correlation test between numerical variables in the dataset:
 ```{r}
 cor_test_mat <- corr.test(numeric_flights_full, method = "spearman")  
 #r
