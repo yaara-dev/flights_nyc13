@@ -27,7 +27,7 @@ The merged dataset contains 47 variables and 276688 observations.
 
 
 
-```{r}
+```{r, warning = FALSE}
  #Load packages:
  options(repos = list(CRAN="http://cran.rstudio.com/"))
 list.of.packages <-
@@ -2395,7 +2395,7 @@ run_random <- function(train, ntrees=1000, depth = NULL) {
 }
 ```
 
-```{r}
+```{r, label='rf'}
 rf <- run_random(train)
 rf
 ```
@@ -2415,7 +2415,7 @@ As we can see we have high accuracy for predicting delay!
 
 Earlier on we chose 20 minutes as a threshold to determine if a flight is considered delayed.We generated two additional datasets: one with a higher threshold (25 minutes) and one with a lower threshold (15 minutes) in order to test the sensitivity of our predictions. Let's run our model on these datasets: Let's run our model on these datasets:
 
-```{r}
+```{r, label='rf2'}
 ##sensitivity check
 #threshold = 15
 rf_15 <- run_random(train_15) #run random forest
@@ -2534,7 +2534,7 @@ grid.arrange(p2, p3, ncol = 2)
 
 Check for overfit with twice the number of trees and a limited depth for the trees:
 
-```{r}
+```{r, label='overfit'}
 rf_check <- run_random(train, ntrees = 2000, depth = 20)
 pred_check <- predict(rf_check, test)
 confusion_check <- table(test$dep_delay, pred_check$predictions)
