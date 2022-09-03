@@ -113,6 +113,7 @@ Plot the weather variables vs. the departure delay to see if we can visually spo
 ```{r}
 plot_var_vs_dep_delay <-
   function(var_name, df = numeric_flights_full){
+    df <- df[sample(nrow(df), 10000), ]
      p<-ggplot(data = df, mapping = aes(x = get(var_name), y = dep_delay)) +
       geom_point(alpha = 0.2) +
       geom_smooth(method = "lm",level=0.2) +
@@ -120,7 +121,7 @@ plot_var_vs_dep_delay <-
         x = sprintf("%s", var_name),
         y = "Departure delay (min)",
         title = sprintf("%s vs departure delay", var_name))
-    return(list(p))
+    return(p)
 }
 
 numeric_vars <- c(
