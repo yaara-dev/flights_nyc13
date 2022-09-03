@@ -6,12 +6,20 @@ on:
 name: Build Rmd
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  render:
+    name: Render README
+    runs-on: macOS-latest
     steps:
-      - name: Set up Git repository
-        uses: actions/checkout@v2
-      - name: Render document
-        uses: lc5415/rmarkdown-action@v1
-        with:
-          input_file: flights_nyc13/Yaara_Tal_Flights.Rmd
+      - uses: actions/checkout@v2
+      - uses: r-lib/actions/setup-r@v1
+      - uses: r-lib/actions/setup-pandoc@v1
+      - name: Install rmarkdown
+        run: Rscript -e 'install.packages("rmarkdown")'
+      - name: Render README
+        run: Rscript -e 'rmarkdown::render("flights_nyc13/Yaara_Tal_Flights.Rmd", output_format = "md_document",output_dir='./',output_file='README.md')'
+      - name: Commit results
+        run: |
+          git add README.md
+          git add README_files/.
+          git commit README.md -m 'Re-build flights_nyc13/Yaara_Tal_Flights.Rmd' || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
