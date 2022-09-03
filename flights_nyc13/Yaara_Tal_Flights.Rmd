@@ -18,7 +18,14 @@ This project aims to generate a prediction model of departure delay time. A reli
 
 ## Data
 
-Our analysis is based on the public flights dataset taken from the "nycflights13" R package. This package contains information about all flights that departed from NYC in 2013. We used additional datasets from the same package, such as 'planes', 'weather', and 'airport'. These datasets provide extensive information about the flights. 'planes' dataset contains construction information about each plane and was merged with the 'flights' dataset by the common variable column "tailnum". 'weather' dataset, which includes hourly meteorological data for each airport, was merged with 'flights' according to the "origin" and "time_hour" variable columns. Similarly, the 'airports' dataset, which represents all involved airports and their locations, was merged with 'flights' by "faa"(="dest") variable column. The merged dataset contains 47 variables and 276688 observations.
+
+Our analysis is based on the public flights dataset taken from the "nycflights13" R package. This package contains information about all flights that departed from NYC in 2013. We used additional datasets from the same package, such as 'planes', 'weather', and 'airport'. These datasets provide extensive information about the flights. 
+'planes' dataset contains construction information about each plane and was merged with the 'flights' dataset by the common variable column "tailnum". 
+'weather' dataset, which includes hourly meteorological data for each airport, was merged with 'flights' according to the "origin" and "time_hour" variable columns.
+Similarly, the 'airports' dataset, which represents all involved airports and their locations, was merged with 'flights' by "faa"(="dest") variable column.
+The merged dataset contains 47 variables and 276688 observations.
+
+
 
 ```{r}
  #Load packages:
@@ -102,7 +109,9 @@ head(flights_full)
 
 ## Exploratory data analysis (EDA) + pre-proccessing analysis
 
-Plot the weather variables vs. the departure delay to see if we can visually spot variables that have a relationship with the departure delay. On top of the scatter plot there is a linear model fit line:
+In order to predict successfully a delayed flight we would like to use most affecting features/variables in our model and avoid from features that may increase noise. Achieving this goal requires pre-processing steps in which we reduce the number of variables and the number of levels/categories in variables.
+
+First, we plotted weather variables vs. departure delay in order to visually spot if there is a linear relationship between them. On top of the scatter plot there is a linear model fit line:
 
 ```{r}
 plot_var_vs_dep_delay <-
@@ -143,10 +152,12 @@ grid.arrange(grobs = plot_list, ncol = 3)
 
 ```
 
-In order to calculate the Pearson correlation, certain assumptions must be met; one of them is that there must be a linear relationship between the variables in question. From observing the scatter plots of the weather parameters vs. the departure delay parameter, there is no linear relationship between these variables. We calculated the Spearman correlation, which does not have these assumptions.
 
-Perform Spearman correlation between weather parameters and flight parameters:
+we would like to examine correlation between numeric variables. 
+In order to calculate Pearson correlation, certain assumptions must be met; one of them is that there must be a linear relationship between the variables. Observing the scatter plots above, we can see there is no linear relationship between those numeric variables. 
+Thus, we chose to apply Spearman correlation test, which does not require linear relationship assumptions.
 
+Thus, we perform Spearman correlation test between numerical variables in the dataset::
 ```{r}
 cor_test_mat <- corr.test(numeric_flights_full, method = "spearman")  
 #r
@@ -374,15 +385,19 @@ flights_full_arranged <-
 
 ```{r}
 str(flights_full_arranged)
-summary(flights_full_arranged)
 ```
 
-### Merge manufacturer+model
+### Merge Manufacturer + Model Variables
 
-Merge manufacture and model into manu_model variable - eventually we excluded it from analysis since it is in correlation with model and manufacturer (show the correlation)
+We found that part of model planes' were repeated in several manufacturers. It means that when two planes share the same model name but different manufacturers, they are Not actually recognized by exactly the same model. As a result, we decided to combine 'manufacturer' and 'model' columns into one column named 'manu_model' with the aim of reducing the amount of variables in the dataset.
 
 ```{r}
+# show in how many different manufacturers each model presented
+manufacturer_model_df<-flights_full_arranged %>% group_by(manufacturer, model) %>% summarise(counts=n())
+table_manufacturer_model<-table(manufacturer_model_df$model)
+table_manufacturer_model[table_manufacturer_model>1] # models' prevalence in different manufacturers
 
+```
 # merge manufacturer and model columns into one column
 manu_model <-
   paste(flights_full_arranged$manufacturer,
@@ -393,8 +408,7 @@ flights_full_arranged$manu_model <- manu_model
 ```
 
 ### Plots of normalized delayed flights counts per variable's categories
-
-In order to visually check whether a variable demonstrates variability in delayed flights (in cases when dep_delay=1), we created a bar plot for each variable separately while considering the number of flights in each category. Thus, for each category in a given variable, we calculated the relative amount of delayed flights out of the total flights amount in the current category. Due to this calculation, we can compare the categories.
+In order to visually check whether a variable demonstrates variability in delayed flights (in cases when dep_delay=1) we created bar plot for each variable separately, while taking into account the amount of flights in each category. Thus, for each category in a given variable we calculated relative amount of delayed flights out of total flights amount in the current category. Due to this calculation we can compare between the categories.
 
 ```{r}
 flights_full_arranged_factors_all <-
@@ -574,10 +588,8 @@ ggplot(df_wind, aes(x = wind_dir, y = relative_count_1, fill = mean_speed)) +
 In order to optimize our model, we decreased the number of categories (levels) in factorial variables that are identified with a large number of categories. This step was performed using the statistical permutation test on each variable separately. Our assumption is that in a particular variable, a category that belongs to a delayed flights, not by chance, should be considered individually in our model since it can indicate the possibility of delay of a future flight related to this category.
 However, a category that repeats on random realizations with the same or even larger prevalence of delayed flights will probably fail to reject the null hypothesis that delayed flights are not over-represented in the current category in the original dataset. Thus, the insignificant categories of a variable should be combined into one aggregated category.
 
-We performed 2000 realizations of the original dataset: During each realization, we randomly shuffled the departure time delay ('dep_delay') column and counted how many flights labeled as delayed (with dep_delay=1) for each category in each variable separately.
-Next, we compared it to the original count of departure delayed flights in the particular category.
-
-The P-value for a given category was calculated as the number of realizations when the count of departure delayed flights was equal to or higher than the original delayed flights count in this category (plus one), divided by the total number of realizations.
+We performed 2000 realizations of the original dataset: During each realization, we randomly shuffled the departure time delay ('dep_delay') column and counted how many flights labeled as delayed (with dep_delay=1) for each category in each variable separately. Next, we compared it to the original count of departure delayed flights in the particular category.
+The P-value for a given category was calculated as the number of realizations when the count of departure delayed flights was equal to or even higher than the original delayed flights count in this category (plus one), divided by the total number of realizations.
 For example, a permutation analysis p-value of 1e-3 (in case of 1000 total realizations) means that the null hypothesis was rejected in all the realizations, suggesting that the specific category is significant in distinguishing delayed flights in the original dataset, using a confidence of 0.005. Finally, the permutation analysis p-value was corrected for multiple testing using the Benjamini-Hochberg procedure.
 
 The P-value for a given category was calculated as the number of realizations when the count of departure delayed flights was equal to or higher than the original delayed flights count in this category (plus one), divided by the total number of realizations. For example, a permutation analysis p-value of 1e-3 (in case of 1000 total realizations) means that the null hypothesis was rejected in all the realizations, suggesting that the specific category is significant in distinguishing delayed flights in the original dataset, using a confidence of 0.005. Finally, the permutation analysis p-value was corrected for multiple testing using the Benjamini-Hochberg procedure.
@@ -2142,10 +2154,9 @@ flights_full_arranged_25$seats <-
 
 ## Inference
 
-### Classification Decision Tree
+### Data Balancing
 
-We decided to exclude manu_model from model analysis since there is a correlation between manu_model and modelq manufacturer - show test/statistical proves!
-
+We decided to exclude manu_model from model analysis since there is a correlation between manu_model and model manufacturer - show test/statistical proves!
 ```{r echo=FALSE}
 
 flights_full_arranged<-flights_full_arranged %>% select(-c(manu_model))
@@ -2196,6 +2207,8 @@ ggplot(balanced_data, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
 
 ```
 
+### Train-Test Split
+
 Next, split the balanced data to train and test (80/20)
 
 ```{r}
@@ -2229,6 +2242,8 @@ balanced_data_25 <- get_balanced_df(flights_full_arranged_25) #balance the data
 train_25 <- train_test_split(balanced_data_25)[[1]] #divide to train and test
 test_25 <- train_test_split(balanced_data_25)[[2]]
 ```
+
+### Classification Decision Tree
 
 Run classification decision tree on train set
 
