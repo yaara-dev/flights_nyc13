@@ -12,7 +12,7 @@ knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
 
 ## Introduction
 
-Flight delays are a significant societal problem as they impair airlines, transport companies, air traffic controllers, facility managers, and passengers. Studying flight data is an essential activity for every player involved in the air transportation system. Given the uncertainty of delays, passengers usually plan to travel many hours earlier for their appointments. They might have to increase their travel costs to arrive on time. Airlines suffer penalties, fines, and additional operation costs, such as airport crew and aircraft retention. Regarding sustainability, delays may also increase environmental issues due to increased fuel consumption and gas emissions (Rebollo & Balakrishnan, 2014; Sternberg et al., 2017;Carvalho et al., 2021).
+Flight delays are a significant societal problem as they impair airlines, transport companies, air traffic controllers, facility managers, and passengers. Studying flight data is an essential activity for every player involved in the air transportation system. Given the uncertainty of delays, passengers usually plan to travel many hours earlier for their appointments. They might have to increase their travel costs to arrive on time. Airlines suffer penalties, fines, and additional operation costs, such as airport crew and aircraft retention. Regarding sustainability, delays may also increase environmental issues due to increased fuel consumption and gas emissions (Rebollo and Balakrishnan 2014) Sternberg et al., 2017; (Carvalho et al. 2021).
 
 This project aims to generate a prediction model of departure delay time. A reliable prediction will benefit airports, airlines, passengers, and global environmental sustainability.
 
@@ -2573,3 +2573,17 @@ The Random Forest model reached a much higher level of accuracy than the decisio
 However, the high accuracy score raises our concern that the model may overfit the data. In order to examine the matter, we performed another run of the Random Forest model where we limited the maximum tree depth and increased the number of trees (from 1000 to 2000). The result of this run showed 94% accuracy, which is still high but is unlikely to be overfitted to the large number of trees and the limitation of the trees' depth. Further, the model is highly accurate for the test as well, so it may just be excellent at predicting. Another possible explanation is that there is indeed an overfit resulting from the fact that the training and the test are similar since they were taken from the same data set.
 
 In conclusion, we have shown that it is possible to predict if there will be a delay in takeoff with a high probability using a Random Forest model that considers various parameters related to weather, aircraft characteristics, airport, destination, airlines, etc. For further research, it is worthwhile to implement the model on current databases for two reasons; The first is to verify the model and see that it is not adjusted only for 2013. Second, since the Corona epidemic, the world of flights has changed, for example the airlines have changed partly due to bankruptcies of low-cost companies, and the loads at the airport have changed as well.
+
+#### References
+
+On the relevance of data science for flight delay research: a systematic review
+Carvalho L, Sternberg A, Maia Gonçalves L, Beatriz Cruz A, Soares JA et al.
+Transp. Rev., 2021
+
+A Review on Flight Delay Prediction
+Sternberg A, Soares J, Carvalho D, Ogasawara E
+arXiv [cs.CY], 2017
+
+Characterization and prediction of air traffic delays
+Rebollo JJ, Balakrishnan H
+Transp. Res. Part C: Emerg. Technol., 2014
