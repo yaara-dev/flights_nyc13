@@ -1109,7 +1109,7 @@ levels(flights_full_arranged$seats)
 
 #### Sensitivity Check
 
-In order to check the sensitivity of our prediction models to the threshold we chose to distinguish between delayed and non delayed flights, we will generate 2 additional datasets one with higher threshold - 25 minutes, and one with a lower threshold - 15 minutes. Some of the pre-processing is dependent on the labels assigned to each flight (0- non delay, 1- delay). Therefore, we will perform the neccessary pre-processing steps to ensure that the data is coherent.
+In order to check the sensitivity of our prediction models to the threshold we chose to distinguish between delayed and non-delayed flights, we will generate two additional datasets, one with a higher threshold - 25 minutes, and one with a lower threshold - 15 minutes. Some of the pre-processing depends on the labels assigned to each flight (0- non-delay, 1- delay). Therefore, we will perform the necessary pre-processing steps to ensure that the data is coherent.
 
 Threshold = 15 minutes
 
