@@ -395,41 +395,61 @@ flights_full_arranged$manu_model <- manu_model
 In order to visually check whether a variable demonstrates variability in delayed flights (in cases when dep_delay=1), we created a bar plot for each variable separately while considering the number of flights in each category. Thus, for each category in a given variable, we calculated the relative amount of delayed flights out of the total flights amount in the current category. Due to this calculation, we can compare the categories.
 
 ```{r}
-flights_full_arranged_factors_all<-data.frame(lapply(flights_full_arranged,factor))
+flights_full_arranged_factors_all <-
+  data.frame(lapply(flights_full_arranged, factor))
 str(flights_full_arranged_factors_all)
 
-gplot_var<-function(var_name, convert_x, palette_a=FALSE){
-  count_df_var<- flights_full_arranged_factors_all %>% group_by(!!(sym(var_name))) %>% summarize(total_count=n())
-  df_var<-flights_full_arranged_factors_all %>% group_by(!!(sym(var_name)), dep_delay) %>% tally() %>% filter(dep_delay==1) 
-  df_var<-merge(df_var, count_df_var, by= var_name)
-  df_var <- df_var %>% mutate(relative_count_1=n/total_count)
-  varX<-paste(var_name,".x", sep="")
-  colnames(df_var)[which(colnames(df_var)==varX)]<-var_name
-  g<-ggplot(data = df_var, mapping = aes_string(x = var_name, y = "relative_count_1", fill = var_name))+ geom_bar(stat="identity", show.legend = FALSE)+
-   labs(fill=var_name, x=var_name, y='Normalized count delayed flights', title= paste("Normalized count delayed flights per category in", var_name))
-  if (convert_x==TRUE){
-    t<- theme(
-      plot.title = element_text(hjust = 0.5,
-                                size = 19,
-                                face = "bold"),
+gplot_var <- function(var_name, convert_x, palette_a = FALSE) {
+  count_df_var <-
+    flights_full_arranged_factors_all %>% group_by(!!(sym(var_name))) %>% summarize(total_count =
+                                                                                      n())
+  df_var <-
+    flights_full_arranged_factors_all %>% group_by(!!(sym(var_name)), dep_delay) %>% tally() %>% filter(dep_delay ==
+                                                                                                          1)
+  df_var <- merge(df_var, count_df_var, by = var_name)
+  df_var <- df_var %>% mutate(relative_count_1 = n / total_count)
+  varX <- paste(var_name, ".x", sep = "")
+  colnames(df_var)[which(colnames(df_var) == varX)] <- var_name
+  g <-
+    ggplot(
+      data = df_var,
+      mapping = aes_string(x = var_name, y = "relative_count_1", fill = var_name)
+    ) + geom_bar(stat = "identity", show.legend = FALSE) +
+    labs(
+      fill = var_name,
+      x = var_name,
+      y = 'Normalized count delayed flights',
+      title = paste("Normalized count delayed flights per category in", var_name)
+    )
+  if (convert_x == TRUE) {
+    t <- theme(
+      plot.title = element_text(
+        hjust = 0.5,
+        size = 19,
+        face = "bold"
+      ),
       axis.text.x = element_text(
         angle = 90,
         vjust = 0.5,
         hjust = 1,
         size = 6
-      ))
+      )
+    )
   } else {
     t <- theme(
-      plot.title = element_text(hjust = 0.5,
-                                size = 19,
-                                face = "bold"),
-      axis.text.x = element_text(
-        size = 6))}
-  if (!(palette_a==FALSE)){
-    color<-scale_fill_brewer(palette = palette_a)
-    g+t+color
+      plot.title = element_text(
+        hjust = 0.5,
+        size = 19,
+        face = "bold"
+      ),
+      axis.text.x = element_text(size = 6)
+    )
+  }
+  if (!(palette_a == FALSE)) {
+    color <- scale_fill_brewer(palette = palette_a)
+    g + t + color
   } else {
-    g+t
+    g + t
   }
 }
 
