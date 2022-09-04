@@ -2627,8 +2627,12 @@ In the first step, we ran a decision tree model. This model reached an accuracy 
 
 The Random Forest model reached a much higher level of accuracy than the decision tree, 98%. In principle, the chance of an overfit in Random Forest is low thanks to bagging and random feature selection; they are trained independently on different subsets of the training data.
 However, the high accuracy score raises our concern that the model may overfit the data. In order to examine the matter, we performed another run of the Random Forest model where we limited the maximum tree depth and increased the number of trees (from 1000 to 2000). The result of this run showed 94% accuracy, which is still high but is unlikely to be overfitted to the large number of trees and the limitation of the trees' depth. Further, the model is highly accurate for the test as well, so it may just be excellent at predicting. Another possible explanation is that there is indeed an overfit resulting from the fact that the training and the test are similar since they were taken from the same data set.
+In conclusion, we have shown that it is possible to predict if there will be a delay in takeoff with a high probability using a Random Forest model that considers various parameters related to weather, aircraft characteristics, airport, destination, airlines, etc.
 
-In conclusion, we have shown that it is possible to predict if there will be a delay in takeoff with a high probability using a Random Forest model that considers various parameters related to weather, aircraft characteristics, airport, destination, airlines, etc. For further research, it is worthwhile to implement the model on current databases for two reasons; The first is to verify the model and see that it is not adjusted only for 2013. Second, since the Corona epidemic, the world of flights has changed, for example the airlines have changed partly due to bankruptcies of low-cost companies, and the loads at the airport have changed as well.
+### Future Research
+
+For further research, it is worthwhile to implement the model on current databases for two reasons; The first is to verify the model and see that it is not adjusted only for 2013. Second, since the Corona epidemic, the world of flights has changed, the pandemic inflicted a heavy toll on global aviation, which resulted in ratings downgrades, liquidation and bankruptcy of several airlines and airports due to severe cash burn instigated by travel restrictions.(Dube et al. 2021)
+In addition, our work divided the data into a binary form and used classification models to predict delayed or non-delayed flights. An improvement of the model can also include using a random forest that calculates regression and makes it possible to get an exact number of minutes of delay.
 
 #### References
 
@@ -2646,3 +2650,6 @@ Transp. Res. Part C: Emerg. Technol., 2014
 
 Visa, S., Ramsay, B., Ralescu, A. L., & Van Der Knaap, E. (2011). Confusion matrix-based feature selection. MAICS, 710(1), 120-127.
 
+COVID-19 pandemic and prospects for recovery of the global aviation industry
+Dube K, Nhamo G, Chikodzi D
+J. Air Transp. Manage., 2021
