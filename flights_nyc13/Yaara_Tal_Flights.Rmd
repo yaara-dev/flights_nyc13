@@ -273,12 +273,6 @@ flights_full <- fast_filter_variables(
 )
 ```
 
-Let's take a look at the data:
-
-```{r}
-summary(flights_full)
-```
-
 Suspected columns to have mostly NAs
 
 ```{r}
@@ -314,6 +308,14 @@ flights_full <-
   )
 
 ```
+
+Let's take a look at the data:
+
+```{r}
+summary(flights_full)
+```
+
+
 ### Dividing Departure Delay Variable into 2 Categories - 'delay' vs. 'no delay'
 
 Since we would like to predict if a particular flight will be delayed, we logically selected a threshold indicating a significant delay on time - 20 minutes.
@@ -2122,9 +2124,7 @@ head(flights_full_arranged)
 
 ```{r}
 
-flights_full_arranged_15<-flights_full_arranged_15 %>% select(-c(model, manufacturer))
 ncol(flights_full_arranged_15)
-flights_full_arranged_25<-flights_full_arranged_25 %>% select(-c(model, manufacturer))
 ncol(flights_full_arranged_25)
 ```
 ### Train-Test Split
@@ -2144,8 +2144,9 @@ train_test_split <- function(flights_data) {
 ```
 
 ```{r}
-train <- train_test_split(flights_full_arranged)[[1]]
-test <- train_test_split(flights_full_arranged)[[2]]
+train_test_20 <- train_test_split(flights_full_arranged)
+train_splitted<- train_test_20[[1]]
+test <- train_test_20[[2]]
 dim(train)
 dim(test)
 ```
@@ -2196,14 +2197,23 @@ Sensitivity check - splitting into train-test data sets and balancing the train 
 
 ```{r}
 #threshold = 15
-train_15 <- train_test_split(flights_full_arranged_15)[[1]] #divide to train and test
-train_15 <- get_balanced_df(train_15)#balance the data
-test_15 <- train_test_split(flights_full_arranged_15)[[2]]
+train_test_15 <- train_test_split(flights_full_arranged_15) #divide to train and test
+
+train_15_splitted<- train_test_15[[1]] #train data
+train_15 <- get_balanced_df(train_15_splitted)#balance the data
+
+test_15_splitted<- train_test_15[[2]] #test data
+test_15 <- get_balanced_df(test_15_splitted) #balance the data
+
 
 #threshold = 25
-train_25 <- train_test_split(flights_full_arranged_25)[[1]] #divide to train and test
-train_25 <- get_balanced_df(train_25) #balance the data
-test_25 <- train_test_split(flights_full_arranged_25)[[2]]
+train_test_25 <- train_test_split(flights_full_arranged_25) #divide to train and test
+
+train_25_splitted<- train_test_25[[1]] #train data
+train_25 <- get_balanced_df(train_25_splitted)#balance the data
+
+test_25_splitted<- train_test_25[[2]] #test data
+test_25 <- get_balanced_df(test_25_splitted) #balance the data
 ```
 
 ### Classification Decision Tree
@@ -2374,7 +2384,8 @@ Performing our model on these datasets:
 
 Threshold = 15
 ```{r}
-class_15 <- rpart(dep_delay~ ., data=train_15, method = 'class', control = c(cp=0.0001, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)) #run classification decision tree
+class_15 <- rpart(dep_delay~ ., data=train_15, method = 'class', control = c(cp=0.0001)) #maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)) #run classification decision tree
+
 pred_class_15 <- predict(class_15, test_15, type = 'class') #prediction
 confusion_class_15 <- confusionMatrix(pred_class_15, test_15$dep_delay)
 confusion_class_15
@@ -2384,7 +2395,8 @@ accuracy_num_class_15<-accuracy(test$dep_delay, pred_class_15)
 
 Threshold = 25
 ```{r}
-class_25 <- rpart(dep_delay~ ., data=train_25, method = 'class', control = c(cp=0.0001, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)) #run classification decision tree
+class_25 <- rpart(dep_delay~ ., data=train_25, method = 'class', control = c(cp=0.0001)) #maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)) #run classification decision tree
+
 pred_class_25 <- predict(class_25, test_25, type = 'class') #prediction
 confusion_class_25 <- confusionMatrix(pred_class_25, test_25$dep_delay)
 confusion_class_25
