@@ -285,7 +285,35 @@ Suspected columns to have mostly NAs
 length(which(is.na(flights_full$speed)))
 length(which(is.na(flights_full$wind_gust)))
 ```
+Remove irrelevant columns
 
+```{r}
+flights_full <-
+  select(
+    flights_full,-c(
+      time_hour,
+      arr_delay,
+      flight,
+      tailnum,
+      arr_time,
+      dep_time,
+      name,
+      lat,
+      lon,
+      alt,
+      tz,
+      dst,
+      speed,
+      wind_gust,
+      dewp,
+      hour.x,
+      minute,
+      day.x,
+      air_time
+    )
+  )
+
+```
 ### Dividing Departure Delay Variable into 2 Categories - 'delay' vs. 'no delay'
 
 Since we would like to predict if a particular flight will be delayed, we logically selected a threshold indicating a significant delay on time - 20 minutes.
@@ -358,35 +386,7 @@ ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(stat=
 
 ```
 
-Remove irrelevant columns
 
-```{r}
-flights_full_arranged <-
-  select(
-    flights_full_arranged,-c(
-      time_hour,
-      arr_delay,
-      flight,
-      tailnum,
-      arr_time,
-      dep_time,
-      name,
-      lat,
-      lon,
-      alt,
-      tz,
-      dst,
-      speed,
-      wind_gust,
-      dewp,
-      hour.x,
-      minute,
-      day.x,
-      air_time
-    )
-  )
-
-```
 
 ```{r}
 str(flights_full_arranged)
@@ -2113,7 +2113,9 @@ As we prefer to reduce the number of predicting variables in our model to preven
 
 ```{r echo=FALSE}
 
-flights_full_arranged<-flights_full_arranged %>% select(-c(model, manufacturer))
+flights_full_arranged <- flights_full_arranged %>% select(-c(model, manufacturer))
+flights_full_arranged_15 <- flights_full_arranged_15 %>% select(-c(model, manufacturer))
+flights_full_arranged_25 <-flights_full_arranged_25 %>% select(-c(model, manufacturer))
 ncol(flights_full_arranged)
 head(flights_full_arranged)
 ```
@@ -2475,6 +2477,7 @@ run_random <- function(train, ntrees=1000, depth = NULL) {
     importance = 'impurity',
     max.depth = depth,
     verbose = TRUE,
+    seed = 26
     
   )
   return(fit)
@@ -2491,6 +2494,7 @@ We can see that the OOB prediction error is very low, which means the estimated 
 Prediction of the test data set:
 
 ```{r}
+test <- test %>% drop_na(year.y, temp, humid, wind_dir, wind_speed, pressure)
 pred <- predict(rf, test)
 confusion <- table(test$dep_delay, pred$predictions)
 
@@ -2509,6 +2513,7 @@ Threshold = 15
 ```{r, label='rf2'}
 rf_15 <- run_random(train_15) #run random forest
 rf_15
+test_15 <- test_15 %>% drop_na(year.y, temp, humid, wind_dir, wind_speed, pressure)
 pred_15 <- predict(rf_15, test_15) #prediction
 confusion_15 <- table(test_15$dep_delay, pred_15$predictions)
 confusion_15
@@ -2519,6 +2524,7 @@ Threshold = 25
 ```{r}
 rf_25 <- run_random(train_25) #run random forest
 rf_25
+test_25 <- test_25 %>% drop_na(year.y, temp, humid, wind_dir, wind_speed, pressure)
 pred_25 <- predict(rf_25, test_25) #prediction
 confusion_25 <- table(test_25$dep_delay, pred_25$predictions)
 confusion_25
