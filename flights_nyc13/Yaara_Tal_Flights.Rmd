@@ -618,7 +618,7 @@ ggplot(df_wind, aes(x = wind_dir, y = relative_count_1, fill = mean_speed)) +
 
 ### Categories Reduction in Factorial Variables using Permutation Test
 
-In order to optimize our model, we decreased the number of categories (levels) in factorial variables that are identified with a large number of categories. This step was performed using a statistical permutation test on each variable separately.
+In order to optimize our model, we decreased the number of categories (levels) in factorial variables that are identified with a large number of categories. This step was performed using a statistical permutation test on each variable separately. Permutation tests are non-parametric and only require the assumption of exchangeability, regardless of whether or not the distribution of the data is known.
 Our assumption is that in a particular variable, a category that belongs to a delayed flight, not by chance, should be considered individually in our model since it can indicate the possibility of delay of a future flight related to this category.
 However, a category that repeats on random realizations with the same or even larger prevalence of delayed flights will probably fail to reject the null hypothesis that delayed flights are not over-represented in the current category in the original dataset. Thus, the insignificant categories of a variable should be combined into one aggregated category.
 
@@ -2189,8 +2189,13 @@ test_25 <- train_test_split(balanced_data_25)[[2]]
 
 ### Classification Decision Tree
 
-Before running prediction model, we would like to choose best parameters for optimizing the model. Thus, we used the machine learning 'mlr' R package that supplies tools to train several different models and to perform tuning for hyperparameters. Using this tools we can view each hyperparameter impact on the performance of the model.In rpart decision tree library, we control the parameters using the rpart.control() function.
+Before running predictive model, we would like to choose best parameters for optimizing the model. Thus, we used the machine learning 'mlr' R package that supplies tools to train several different models and to perform tuning for hyperparameters. Using this tools we can view each hyperparameter impact on the performance of the model.In 'rpart' decision tree library, we control the parameters using the rpart.control() function. 
+We chose the following hyperparameters to include in our model:
+*minsplit - the minimum number of observations that must exist in a node in order for a split to be attempted.
+*maxdepth - the maximum depth of any node of the final tree. 
+*complexity parameter (cp) - the amount of improved relative error when splitting the node. For example, splitting the original root node decreases the relative error from 1.0 to 0.5, so the CP of the root node is 0.5. (Elsayed, 2019)
 
+We created a grid of the hyperparameters to iterate on. For each iteration using cross validation method we measured the accuracy to evaluate the results of each parameters combination .
 ```{r}
 train_df<-as.data.frame(train)
 test_df<-as.data.frame(test)
@@ -2612,11 +2617,14 @@ In addition, our work divided the data into a binary form and used classificatio
 
 #### References
 
-Carvalho, Leonardo, Alice Sternberg, Leandro Maia Gonçalves, Ana Beatriz Cruz, Jorge A. Soares, Diego Brandão, Diego Carvalho, and Eduardo Ogasawara. 2021. “On the Relevance of Data Science for Flight Delay Research: A Systematic Review.” Transport Reviews 41 (4): 499–528.
+*Carvalho, Leonardo, Alice Sternberg, Leandro Maia Gonçalves, Ana Beatriz Cruz, Jorge A. Soares, Diego Brandão, Diego Carvalho, and Eduardo Ogasawara. 2021. “On the Relevance of Data Science for Flight Delay Research: A Systematic Review.” Transport Reviews 41 (4): 499–528.
 
-Rebollo, Juan Jose, and Hamsa Balakrishnan. 2014. “Characterization and Prediction of Air Traffic Delays.” Transportation Research Part C: Emerging Technologies 44 (July): 231–41.
+*Elsayed, A. M. M. Decisions Tree Building for Different Types Data.2019
 
-Sternberg, Alice, Jorge Soares, Diego Carvalho, and Eduardo Ogasawara. 2017. “A Review on Flight Delay Prediction.” arXiv [cs.CY]. arXiv. http://arxiv.org/abs/1703.06118.
+*Rebollo, Juan Jose, and Hamsa Balakrishnan. 2014. “Characterization and Prediction of Air Traffic Delays.” Transportation Research Part C: Emerging Technologies 44 (July): 231–41.
 
-Visa, Ramsay, Ralescu, and Van Der Knaap. n.d. “Confusion Matrix-Based Feature Selection.” MAICS. https://www.researchgate.net/profile/Jennifer-Seitzer-2/publication/220833258_Using_a_Genetic_Algorithm_to_Evolve_a_D_Search_Heuristic/links/545a2bea0cf2bccc49132577/Using-a-Genetic-Algorithm-to-Evolve-a-D-Search-Heuristic.pdf#page=126.
-Dube, Kaitano, Godwell Nhamo, and David Chikodzi. 2021. “COVID-19 Pandemic and Prospects for Recovery of the Global Aviation Industry.” Journal of Air Transport Management 92 (May): 102022.
+*Sternberg, Alice, Jorge Soares, Diego Carvalho, and Eduardo Ogasawara. 2017. “A Review on Flight Delay Prediction.” arXiv [cs.CY]. arXiv. http://arxiv.org/abs/1703.06118.
+
+*Visa, Ramsay, Ralescu, and Van Der Knaap. n.d. “Confusion Matrix-Based Feature Selection.” MAICS. https://www.researchgate.net/profile/Jennifer-Seitzer-2/publication/220833258_Using_a_Genetic_Algorithm_to_Evolve_a_D_Search_Heuristic/links/545a2bea0cf2bccc49132577/Using-a-Genetic-Algorithm-to-Evolve-a-D-Search-Heuristic.pdf#page=126.
+
+*Dube, Kaitano, Godwell Nhamo, and David Chikodzi. 2021. “COVID-19 Pandemic and Prospects for Recovery of the Global Aviation Industry.” Journal of Air Transport Management 92 (May): 102022.
