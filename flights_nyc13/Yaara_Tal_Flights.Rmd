@@ -94,7 +94,7 @@ flights_planes <- merge(flights, planes, by = "tailnum")
 flights_planes_weather <-
   merge(flights_planes, weather, by = c("origin", "time_hour"))
 flights_planes_weather <-
-  flights_planes %>% right_join(weather, by = c("origin", "time_hour"))
+  flights_planes %>% merge(weather, by = c("origin", "time_hour"))
 flights_full <-
   merge(flights_planes_weather,
         airports,
@@ -258,7 +258,7 @@ flights_full <- transform(
   manufacturer = as.factor(manufacturer),
   month.x = ordered(as.factor(month.x)),
   month.y = ordered(as.factor(month.y)),
-  dest<- as.factor(dest)
+  dest= as.factor(dest)
 )
 ```
 
@@ -2124,6 +2124,7 @@ head(flights_full_arranged)
 Split the balanced data to train and test (80/20)
 
 ```{r}
+set.seed(45)
 train_test_split <- function(flights_data) {
   sample = sample.split(flights_data$dep_delay, SplitRatio = .8)
   train = subset(flights_data, sample == TRUE)
@@ -2150,7 +2151,6 @@ We are using ovun.sample function from the ROSE package, which creates possibly 
 majority examples.
 
 ```{r}
-set.seed(20)
 
 get_balanced_df <- function(train, method = "both") {
   balanced.data <-
@@ -2169,7 +2169,7 @@ get_balanced_df <- function(train, method = "both") {
 ```{r}
 #balanced train data
  train <- get_balanced_df(train)
- table(balanced_data$dep_delay)
+ table(train$dep_delay)
 ```
 
 After balancing the train data:
@@ -2207,6 +2207,7 @@ We chose the following hyperparameters to include in our model:
 *complexity parameter (cp) - the amount of improved relative error when splitting the node. For example, splitting the original root node decreases the relative error from 1.0 to 0.5, so the CP of the root node is 0.5. (Elsayed, 2019)
 
 We created a grid of the hyperparameters to iterate on. For each iteration using cross validation method we measured the accuracy to evaluate the results of each parameters combination .
+
 ```{r}
 train_df<-as.data.frame(train)
 test_df<-as.data.frame(test)
@@ -2218,9 +2219,9 @@ model.mlr <- makeClassifTask(
 
 # Search Parameter for Max Depth
 param_grid <- makeParamSet( 
-  makeDiscreteParam("maxdepth", values=seq(20,30, by=3)),
-  makeDiscreteParam("cp", values=seq(0.0001, 0.0006, by=0.0002)),
-  makeDiscreteParam("minsplit", values=seq(15,25, by=3))
+  makeDiscreteParam("maxdepth", values=seq(19,25, by=3)),
+  makeDiscreteParam("cp", values=c(0.00005, 0.0001,0.0002,0.0003, 0.0004)),
+  makeDiscreteParam("minsplit", values=seq(19,25, by=3))
 )
 
 # Define Grid
@@ -2279,18 +2280,51 @@ hyperparam.plot <- hyperparam.plot %>% add_markers() %>% layout(title="Tuning hy
 hyperparam.plot
 ```
 
-Run classification decision tree on train set with best 'max depth' parameter value and 'min split' parameter value. We chose cp=0.0004 instead of cp=0.0001 despite it outputs worse accuracy test, because cp=0.0004 enables visualization and better interpretation of important predicting variables. Ideally we would like to choose cp=0.0001 which gives higher accuracy on validation data set as observed during tuning parameters. overfitting????
+parameters tuning results shows that cp parameter is most affecting the accuracy results on validation set - specifically low cp leads to better mean accuracy of the validation data set. As a result we conducted addition check to evaluate train and test accuracy with critical values of 'cp' parameter.Thus we ran our classification model once with cp=0.00005 and once with cp=0.0001 in order to decide which value yields better and similar train and test accuracy. Large difference between train and test accuracies may indicates on overfitting - a situation when model learned too much the training dataset such that it doesn't predict good observations that were previously unseen.
 
+In order to evaluate the model we would like to estimate the accuracy - a metric used in classification problems to tell the percentage of accurate predictions. Accuracy is calculated by dividing the number of correct predictions (true positive and true negative) by the total number of samples obtained from confusion matrix.
 
-Build the model according to best parameters 
+Train and test accuracy check for cp=0.00005:
 
 ```{r}
-class_best_param = rpart(dep_delay~ .,   data=train, method = 'class', control = c(cp=0.0004, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit))
+#check accuracy train and test for cp=0.00005
+overfit_class = rpart(dep_delay~ .,   data=train, method = 'class', control = c(cp=0.00005), maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)
+
+#predict train
+predicted_class_train_overfit<- predict(overfit_class, train, type = 'class')
+accuracy(train$dep_delay, predicted_class_train_overfit)
+
+#predict test
+predicted_class_test_overfit<- predict(overfit_class, test, type = 'class')
+accuracy(test$dep_delay, predicted_class_test_overfit)
 ```
 
-Visualization of the tree:
+The results obtained for cp=0.00005 may indicates on overfitting since there is difference of almost 0.1 in accuracy value (difference approximately 15% of the test accuracy value). Thus we decided to choose higher 'cp' value (cp=0.0001) which preserves an accuracy test in approximate to accuracy test obtained in cp=0.00005.
+
+Train and test accuracy check for cp=0.0001:
 
 ```{r}
+#check accuracy train and test for cp=0.0001
+best_class = rpart(dep_delay~ .,   data=train, method = 'class', control = c(cp=0.0001), maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)
+
+#predict train
+predicted_class_train_best<- predict(best_class, train, type = 'class')
+accuracy(train$dep_delay, predicted_class_train_best)
+
+#predict test
+predicted_class_test_best<- predict(best_class, test, type = 'class')
+accuracy(test$dep_delay, predicted_class_test_best)
+```
+Choosing cp=0.0001 shows similar results in train and test accuracy (difference around 0.04 which is approximately 5% of test accuracy value=0.7). Those similar results reflecting there is no overfitting in our model and the current parameters values comtributing to better classification of unseen flights.
+
+
+Since a classification model with cp=0.0001 visually looked excessively branched, we plotted a tree with cp=0.0004 which is much less brunched and thus can serves as a visual demonstration (but not accurate) for our model and enables easily interpretation of the decision process in our classification model.
+
+Visualiztion of the tree with cp=0.0004:
+
+```{r}
+class_visual = rpart(dep_delay~ .,   data=train, method = 'class', control = c(cp=0.0004),  maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)
+
 
 split.fun <- function(x, labs, digits, varlen, faclen)
 {
@@ -2303,31 +2337,22 @@ split.fun <- function(x, labs, digits, varlen, faclen)
   labs
 }
 
-rpart.plot(class_best_param, split.fun = split.fun)
+rpart.plot(class_visual, split.fun = split.fun)
 
 ```
 
-Prediction on test data set:
+
+
+Another way to summarize model results is by calculating a confusion matrix which shows the number of correct negative predictions, the number of incorrect positive predictions, the number of incorrect negative prediction, and the number of correct positive predictions (Visa, Ramsay, Ralescu, & Van Der Knaap, 2011). 
 
 ```{r}
-predicted_class<- predict(class_best_param, test, type = 'class')
+confusion_class_train <- confusionMatrix(predicted_class_train_best, train$dep_delay)
+confusion_class_train
+
+confusion_class_test <- confusionMatrix(predicted_class_test_best, test$dep_delay)
+confusion_class_test
+
 ```
-
-Calculate a confusion matrix which shows the number of correct negative predictions, the number of incorrect positive predictions, the number of incorrect negative prediction, and the number of correct positive predictions (Visa, Ramsay, Ralescu, & Van Der Knaap, 2011).
-
-```{r}
-confusion_class <- confusionMatrix(predicted_class, test$dep_delay)
-confusion_class
-```
-
-We would like to estimate the accuracy of test data set - a metric used in classification problems to tell the percentage of accurate predictions. Accuracy is calculated by dividing the number of correct predictions (true positive and true negative) by the total number of samples obtained from confusion matrix.
-
-```{r}
-accuracy_num_class<-accuracy(test$dep_delay, predicted_class)
-accuracy_num_class
-```
-
-We can see from the low test accuracy score shown above that our model failed to predict successfully delayed flights.
 
 
 #### Comparing classification decision tree (with threshold=20) results to sensitivity checks (tresholds 15 and 25) results
