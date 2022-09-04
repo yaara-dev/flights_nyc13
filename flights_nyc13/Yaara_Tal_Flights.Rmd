@@ -2631,7 +2631,7 @@ In conclusion, we have shown that it is possible to predict if there will be a d
 
 ### Future Research
 
-For further research, it is worthwhile to implement the model on current databases for two reasons; The first is to verify the model and see that it is not adjusted only for 2013. Second, since the Corona epidemic, the world of flights has changed, the pandemic inflicted a heavy toll on global aviation, which resulted in ratings downgrades, liquidation and bankruptcy of several airlines and airports due to severe cash burn instigated by travel restrictions.(Dube et al. 2021)
+For further research, it is worthwhile to implement the model on current databases for two reasons; The first is to verify the model and see that it is not adjusted only for 2013. Second, since the Corona epidemic, the world of flights has changed. The pandemic inflicted a heavy toll on global aviation, which resulted in ratings downgrades, liquidation, and bankruptcy of several airlines and airports due to severe cash burn instigated by travel restrictions. (Dube et al. 2021)
 In addition, our work divided the data into a binary form and used classification models to predict delayed or non-delayed flights. An improvement of the model can also include using a random forest that calculates regression and makes it possible to get an exact number of minutes of delay.
 
 #### References
