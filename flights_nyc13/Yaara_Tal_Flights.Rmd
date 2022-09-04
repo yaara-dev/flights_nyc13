@@ -2119,8 +2119,29 @@ ncol(flights_full_arranged)
 head(flights_full_arranged)
 ```
 
+### Train-Test Split
 
-There is a need to balance the dataset because the amount of delays is \~20%.
+Split the balanced data to train and test (80/20)
+
+```{r}
+train_test_split <- function(flights_data) {
+  sample = sample.split(flights_data$dep_delay, SplitRatio = .8)
+  train = subset(flights_data, sample == TRUE)
+  test  = subset(flights_data, sample == FALSE)
+  train_test <- list(train, test)
+  return(train_test)
+}
+
+```
+
+```{r}
+train <- train_test_split(flights_full_arranged)[[1]]
+test <- train_test_split(flights_full_arranged)[[2]]
+dim(train)
+dim(test)
+```
+
+There is a need to balance the train dataset because the amount of delays is \~20%.
 Imbalanced data can cause the model to be very good at learning the class that is the majority, but it will not learn to predict the minority class at the same level.
 There are mainly two ways to handle an imbalanced dataset. 
 1. Random oversampling- duplicates examples from the minority class in the training dataset and can result in overfitting for some models.
@@ -2131,12 +2152,12 @@ majority examples.
 ```{r}
 set.seed(20)
 
-get_balanced_df <- function(flights_full_arranged) {
+get_balanced_df <- function(train, method = "both") {
   balanced.data <-
     ovun.sample(
       dep_delay ~ .,
-      flights_full_arranged,
-      method = "both",
+      train,
+      method = method,
       p = 0.5,
       seed = 1996
     )$data
@@ -2146,55 +2167,35 @@ get_balanced_df <- function(flights_full_arranged) {
 ```
 
 ```{r}
-#balanced_data
- balanced_data <- get_balanced_df(flights_full_arranged)
+#balanced train data
+ train <- get_balanced_df(train)
  table(balanced_data$dep_delay)
 ```
 
-After balancing the data:
+After balancing the train data:
 ```{r echo=FALSE}
 #plot flights counts per 2 dep_delay categories
-ggplot(balanced_data, aes(dep_delay, fill = dep_delay)) + geom_bar(stat="count") + 
+ggplot(train, aes(dep_delay, fill = dep_delay)) + geom_bar(stat="count") + 
   scale_fill_manual(labels=c("0 = no delay", "1 = delay"), values = c('#CC6666', '#FFCCCC')) +
   labs(title = "Flights counts per departure delay category (balanced)", x = "Departure delay categories") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 ```
 
-### Train-Test Split
 
-Split the balanced data to train and test (80/20)
 
-```{r}
-train_test_split <- function(balanced_data) {
-  sample = sample.split(balanced_data$dep_delay, SplitRatio = .8)
-  train = subset(balanced_data, sample == TRUE)
-  test  = subset(balanced_data, sample == FALSE)
-  train_test <- list(train, test)
-  return(train_test)
-}
-
-```
-
-```{r}
-train <- train_test_split(balanced_data)[[1]]
-test <- train_test_split(balanced_data)[[2]]
-dim(train)
-dim(test)
-```
-
-Sensitivity check - creation of balanced data and splitting into train-test data sets:
+Sensitivity check - splitting into train-test data sets and balancing the train data:
 
 ```{r}
 #threshold = 15
-balanced_data_15 <- get_balanced_df(flights_full_arranged_15) #balance the data
-train_15 <- train_test_split(balanced_data_15)[[1]] #divide to train and test
-test_15 <- train_test_split(balanced_data_15)[[2]]
+train_15 <- train_test_split(flights_full_arranged_15)[[1]] #divide to train and test
+train_15 <- get_balanced_df(train_15)#balance the data
+test_15 <- train_test_split(flights_full_arranged_15)[[2]]
 
 #threshold = 25
-balanced_data_25 <- get_balanced_df(flights_full_arranged_25) #balance the data
-train_25 <- train_test_split(balanced_data_25)[[1]] #divide to train and test
-test_25 <- train_test_split(balanced_data_25)[[2]]
+train_25 <- train_test_split(flights_full_arranged_25)[[1]] #divide to train and test
+train_25 <- get_balanced_df(train_25) #balance the data
+test_25 <- train_test_split(flights_full_arranged_25)[[2]]
 ```
 
 ### Classification Decision Tree
