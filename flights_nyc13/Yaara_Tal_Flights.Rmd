@@ -2636,20 +2636,11 @@ In addition, our work divided the data into a binary form and used classificatio
 
 #### References
 
-On the relevance of data science for flight delay research: a systematic review
-Carvalho L, Sternberg A, Maia Gonçalves L, Beatriz Cruz A, Soares JA et al.
-Transp. Rev., 2021
+Carvalho, Leonardo, Alice Sternberg, Leandro Maia Gonçalves, Ana Beatriz Cruz, Jorge A. Soares, Diego Brandão, Diego Carvalho, and Eduardo Ogasawara. 2021. “On the Relevance of Data Science for Flight Delay Research: A Systematic Review.” Transport Reviews 41 (4): 499–528.
 
-A Review on Flight Delay Prediction
-Sternberg A, Soares J, Carvalho D, Ogasawara E
-arXiv [cs.CY], 2017
+Rebollo, Juan Jose, and Hamsa Balakrishnan. 2014. “Characterization and Prediction of Air Traffic Delays.” Transportation Research Part C: Emerging Technologies 44 (July): 231–41.
 
-Characterization and prediction of air traffic delays
-Rebollo JJ, Balakrishnan H
-Transp. Res. Part C: Emerg. Technol., 2014
+Sternberg, Alice, Jorge Soares, Diego Carvalho, and Eduardo Ogasawara. 2017. “A Review on Flight Delay Prediction.” arXiv [cs.CY]. arXiv. http://arxiv.org/abs/1703.06118.
 
-Visa, S., Ramsay, B., Ralescu, A. L., & Van Der Knaap, E. (2011). Confusion matrix-based feature selection. MAICS, 710(1), 120-127.
-
-COVID-19 pandemic and prospects for recovery of the global aviation industry
-Dube K, Nhamo G, Chikodzi D
-J. Air Transp. Manage., 2021
+Visa, Ramsay, Ralescu, and Van Der Knaap. n.d. “Confusion Matrix-Based Feature Selection.” MAICS. https://www.researchgate.net/profile/Jennifer-Seitzer-2/publication/220833258_Using_a_Genetic_Algorithm_to_Evolve_a_D_Search_Heuristic/links/545a2bea0cf2bccc49132577/Using-a-Genetic-Algorithm-to-Evolve-a-D-Search-Heuristic.pdf#page=126.
+Dube, Kaitano, Godwell Nhamo, and David Chikodzi. 2021. “COVID-19 Pandemic and Prospects for Recovery of the Global Aviation Industry.” Journal of Air Transport Management 92 (May): 102022.
