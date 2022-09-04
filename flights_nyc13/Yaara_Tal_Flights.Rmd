@@ -25,9 +25,9 @@ Similarly, the 'airports' dataset, which represents all involved airports and th
 The merged dataset contains 47 variables and 276688 observations.
 
 
+Load packages and dataset:
 
 ```{r, warning = FALSE}
- #Load packages:
  options(repos = list(CRAN="http://cran.rstudio.com/"))
 list.of.packages <-
   c(
@@ -87,8 +87,9 @@ planes <- nycflights13::planes
 weather <- nycflights13::weather
 ```
 
+Merge flights, weather, planes, and airports datasets:
+
 ```{r}
-#merged flights + weather + planes + airports(tzone)
 flights_planes <- merge(flights, planes, by = "tailnum")
 flights_planes_weather <-
   merge(flights_planes, weather, by = c("origin", "time_hour"))
@@ -219,7 +220,7 @@ flights_full <- flights_full %>%
     breaks = c(0, directions$degree_max, 360),
     labels = c(directions$cardinal, 'N')
   ))
-#note: when the wind direction is 0 degrees the wd_cardinal is NA.
+#note: when the wind direction is 0 degrees the wind direction is NA.
 #Also, the wind speed is 0.
 #This is correct because if the wind is not moving then it does not have a direction.
 ```
@@ -264,13 +265,6 @@ flights_full <- transform(
 Remove identical and constant variables
 
 ```{r}
-#identical columns
-identical(flights_full$hour.x, flights_full$hour.y)
-identical(flights_full$month.x, flights_full$month.y)
-identical(flights_full$day.x, flights_full$day.y)
-
-
-#remove identical and constant columns
 flights_full <- fast_filter_variables(
   flights_full,
   level = 2,
@@ -300,10 +294,10 @@ Flights that depart earlier than 10 minutes before their scheduled time (departu
 
 Here we assume that a flight is considered as delayed only if its departure time was delayed by 20 minutes or more. A flight is considered as departed on time, i.e, no delay, if its departure time is in the range of 10 minutes earlier and until 20 minutes late (not including 20 minutes late).
 
+
+Divide the flights into 2 groups according to their dep_delay - flights above 20 min delay, and flights above -10 & until 20 min delay
+
 ```{r}
-
-#divide the flights into 2 groups according to their dep_delay - flights above 20 min delay, and flights above -10 & until 20 min delay
-
 flights_full_new_dep_delay <-
   flights_full[which(flights_full$dep_delay > -10),]
 flights_full_arranged <-
@@ -324,25 +318,39 @@ ggplot(flights_full_arranged, aes(x = dep_delay)) +
     title = paste('Histogram of departure delay time')
   ) +
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
+```
 
-# percentage of dep_delay=0
+Percentage of dep_delay=0
+
+```{r}
 (length(which(flights_full_arranged$dep_delay < (20)))) / nrow(flights_full_arranged)
-# percentage of dep_delay=1
-(length(which(flights_full_arranged$dep_delay >= (20)))) / nrow(flights_full_arranged)
+```
 
-#change dep_delay column into categories (0 / 1)
+Percentage of dep_delay=1
+
+```{r}
+(length(which(flights_full_arranged$dep_delay >= (20)))) / nrow(flights_full_arranged)
+```
+
+Change dep_delay column into categories (0 / 1)
+
+```{r}
 flights_full_arranged <-
   
   flights_full_arranged %>% mutate(dep_delay = case_when(dep_delay < 20 ~ 0,
                                                          dep_delay >= 20 ~ 1))
+```
 
+Convert dep_delay to factor column
 
-#convert dep_delay to factor column
+```{r}
 flights_full_arranged$dep_delay <-
   as.factor(flights_full_arranged$dep_delay)
+```
 
+Plot flights counts per 2 dep_delay categories - add legend
 
-#plot flights counts per 2 dep_delay categories - add legend
+```{r}
 ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(stat="count") + 
   scale_fill_manual(labels=c("0 = no delay", "1 = delay"), values = c('#CC6666', '#FFCCCC')) +
   labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
@@ -392,15 +400,16 @@ To overcome this problem, we decided to combine 'manufacturer' and 'model' colum
 Later we checked whether this variable has priority over the manufacturer variable, and we saw that the variable is equivalent and, in some cases, even takes on higher importance in the models we run. Therefore, we will delete the 'model' and 'manufacturer' columns and leave the 'manu-model' column containing both information.
 
 
+Show in how many different manufacturers each model presented:
+
 ```{r}
-# show in how many different manufacturers each model presented
 manufacturer_model_df<-flights_full_arranged %>% group_by(manufacturer, model) %>% summarise(counts=n())
 table_manufacturer_model<-table(manufacturer_model_df$model)
 table_manufacturer_model[table_manufacturer_model>1] # models' prevalence in different manufacturers
 
 ```
 
-Combine manufacturer and model columns into one column
+Combine manufacturer and model columns into one column:
 
 ```{r}
 manu_model <-
@@ -520,6 +529,7 @@ year_plot
 ```
 
 Engine Type
+
 ```{r}
 # plot normalized delayed flights in type variable
 type_plot<-gplot_var("type", convert_x=FALSE, palette_a="Oranges")                                                                    
@@ -2099,8 +2109,8 @@ flights_full_arranged_25$seats <-
 
 ### Removing Irrelevant Predicting Variables
 
-We decided to exclude 'model' and 'manufacturer' variables from our model analysis and instead we took into account the 'manu_model' variable. As we discussed above we combined models and manufacturers into one column represnting unique models according to their manufacturer. This step prevented future mistakenly grouping of planes with identical model name but different manufacturer.
-As we prefer to reduce number of predicting variables in our model to prevent confusion we removed 'model' and 'manufacturer', and let the model basing on 'mau_model' variable.
+We decided to exclude 'model' and 'manufacturer' variables from our model analysis and instead we took into account the 'manu_model' variable. As we discussed above we combined models and manufacturers into one column representing unique models according to their manufacturer. This step prevented future mistakenly grouping of planes with identical model name but different manufacturer.
+As we prefer to reduce the number of predicting variables in our model to prevent confusion we removed 'model' and 'manufacturer', and let the model be based on 'mau_model' variable.
 
 ```{r echo=FALSE}
 
@@ -2109,8 +2119,29 @@ ncol(flights_full_arranged)
 head(flights_full_arranged)
 ```
 
+### Train-Test Split
 
-There is a need to balance the dataset because the amount of delays is \~20%.
+Split the balanced data to train and test (80/20)
+
+```{r}
+train_test_split <- function(flights_data) {
+  sample = sample.split(flights_data$dep_delay, SplitRatio = .8)
+  train = subset(flights_data, sample == TRUE)
+  test  = subset(flights_data, sample == FALSE)
+  train_test <- list(train, test)
+  return(train_test)
+}
+
+```
+
+```{r}
+train <- train_test_split(flights_full_arranged)[[1]]
+test <- train_test_split(flights_full_arranged)[[2]]
+dim(train)
+dim(test)
+```
+
+There is a need to balance the train dataset because the amount of delays is \~20%.
 Imbalanced data can cause the model to be very good at learning the class that is the majority, but it will not learn to predict the minority class at the same level.
 There are mainly two ways to handle an imbalanced dataset. 
 1. Random oversampling- duplicates examples from the minority class in the training dataset and can result in overfitting for some models.
@@ -2121,12 +2152,12 @@ majority examples.
 ```{r}
 set.seed(20)
 
-get_balanced_df <- function(flights_full_arranged) {
+get_balanced_df <- function(train, method = "both") {
   balanced.data <-
     ovun.sample(
       dep_delay ~ .,
-      flights_full_arranged,
-      method = "both",
+      train,
+      method = method,
       p = 0.5,
       seed = 1996
     )$data
@@ -2136,55 +2167,35 @@ get_balanced_df <- function(flights_full_arranged) {
 ```
 
 ```{r}
-#balanced_data
- balanced_data <- get_balanced_df(flights_full_arranged)
+#balanced train data
+ train <- get_balanced_df(train)
  table(balanced_data$dep_delay)
 ```
 
-And this is after balancing the data:
+After balancing the train data:
 ```{r echo=FALSE}
 #plot flights counts per 2 dep_delay categories
-ggplot(balanced_data, aes(dep_delay, fill = dep_delay)) + geom_bar(stat="count") + 
+ggplot(train, aes(dep_delay, fill = dep_delay)) + geom_bar(stat="count") + 
   scale_fill_manual(labels=c("0 = no delay", "1 = delay"), values = c('#CC6666', '#FFCCCC')) +
   labs(title = "Flights counts per departure delay category (balanced)", x = "Departure delay categories") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 ```
 
-### Train-Test Split
 
-Next, split the balanced data to train and test (80/20)
 
-```{r}
-train_test_split <- function(balanced_data) {
-  sample = sample.split(balanced_data$dep_delay, SplitRatio = .8)
-  train = subset(balanced_data, sample == TRUE)
-  test  = subset(balanced_data, sample == FALSE)
-  train_test <- list(train, test)
-  return(train_test)
-}
-
-```
-
-```{r}
-train <- train_test_split(balanced_data)[[1]]
-test <- train_test_split(balanced_data)[[2]]
-dim(train)
-dim(test)
-```
-
-sensitivity check - creation of balanced data and splitting into train-test data sets:
+Sensitivity check - splitting into train-test data sets and balancing the train data:
 
 ```{r}
 #threshold = 15
-balanced_data_15 <- get_balanced_df(flights_full_arranged_15) #balance the data
-train_15 <- train_test_split(balanced_data_15)[[1]] #divide to train and test
-test_15 <- train_test_split(balanced_data_15)[[2]]
+train_15 <- train_test_split(flights_full_arranged_15)[[1]] #divide to train and test
+train_15 <- get_balanced_df(train_15)#balance the data
+test_15 <- train_test_split(flights_full_arranged_15)[[2]]
 
 #threshold = 25
-balanced_data_25 <- get_balanced_df(flights_full_arranged_25) #balance the data
-train_25 <- train_test_split(balanced_data_25)[[1]] #divide to train and test
-test_25 <- train_test_split(balanced_data_25)[[2]]
+train_25 <- train_test_split(flights_full_arranged_25)[[1]] #divide to train and test
+train_25 <- get_balanced_df(train_25) #balance the data
+test_25 <- train_test_split(flights_full_arranged_25)[[2]]
 ```
 
 ### Classification Decision Tree
@@ -2270,8 +2281,10 @@ hyperparam.plot
 
 Run classification decision tree on train set with best 'max depth' parameter value and 'min split' parameter value. We chose cp=0.0004 instead of cp=0.0001 despite it outputs worse accuracy test, because cp=0.0004 enables visualization and better interpretation of important predicting variables. Ideally we would like to choose cp=0.0001 which gives higher accuracy on validation data set as observed during tuning parameters. overfitting????
 
+
+Build the model according to best parameters 
+
 ```{r}
-# build model according to best parameters 
 class_best_param = rpart(dep_delay~ .,   data=train, method = 'class', control = c(cp=0.0004, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit))
 ```
 
@@ -2317,22 +2330,25 @@ accuracy_num_class
 We can see from the low test accuracy score shown above that our model failed to predict successfully delayed flights.
 
 
-#### comparing classification decision tree (with threshold=20) results to sensitivity checks (tresholds 15 and 25) results
+#### Comparing classification decision tree (with threshold=20) results to sensitivity checks (tresholds 15 and 25) results
 
-As mentioned earlier, we chose 20 minutes as a threshold to determine if a flight is considered delayed. We generated two additional datasets: one with a higher threshold (25 minutes) and one with a lower threshold (15 minutes) in order to test the sensitivity of our predictions.
+As mentioned earlier, we chose 20 minutes as a threshold to determine if a flight is considered delayed.
+We generated two additional datasets: one with a higher threshold (25 minutes) and one with a lower threshold (15 minutes) in order to test the sensitivity of our predictions.
+
 Performing our model on these datasets:
 
+Threshold = 15
 ```{r}
-##sensitivity check
-#threshold = 15
 class_15 <- rpart(dep_delay~ ., data=train_15, method = 'class', control = c(cp=0.0004, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)) #run classification decision tree
 pred_class_15 <- predict(class_15, test_15, type = 'class') #prediction
 confusion_class_15 <- confusionMatrix(pred_class_15, test_15$dep_delay)
 confusion_class_15
 accuracy_num_class_15<-accuracy(test$dep_delay, pred_class_15)
+```
 
 
-#threshold = 25
+Threshold = 25
+```{r}
 class_25 <- rpart(dep_delay~ ., data=train_25, method = 'class', control = c(cp=0.0004, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)) #run classification decision tree
 pred_class_25 <- predict(class_25, test_25, type = 'class') #prediction
 confusion_class_25 <- confusionMatrix(pred_class_25, test_25$dep_delay)
@@ -2365,7 +2381,7 @@ plot(
   main = sprintf('Predicted vs Obsvered confusion matrix (25)\n accuracy score: %s', round(accuracy_num_class_25,3)))
 ```
 
-Plot of each predictor's importance in simple classification tree model when the threshold=20:
+Plot each predictor's importance in simple classification tree model when the threshold=20:
 
 ```{r}
 class_best_param$variable.importance %>%
@@ -2380,7 +2396,7 @@ class_best_param$variable.importance %>%
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
 ```
 
-Plot of each predictor's importance in simple classification tree model in case of threshold=15:
+Plot each predictor's importance in simple classification tree model in case of threshold=15:
 
 ```{r}
 class_15$variable.importance %>%
@@ -2395,7 +2411,7 @@ class_15$variable.importance %>%
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
 ```
 
-Plot of each predictor's importance in simple classification tree model in case of threshold=25:
+Plot each predictor's importance in simple classification tree model in case of threshold=25:
 
 ```{r}
 class_25$variable.importance %>%
@@ -2450,21 +2466,24 @@ confusionMatrix(confusion)
 
 As we can see we have high accuracy for predicting delay!
 
-Running random forest model followed with sensitivity checks. We applied the current random forest model on a data based on 20 minutes threshold as definition for delayed flight and 15 minutes threshold, as we performed in simple classification decision tree.
+Running the Random Forest model followed with sensitivity check:
+
+We applied the current Random Forest model on a data based on 20 minutes threshold as definition for delayed flight. Now we will on the sensitivity check dtasets we generated, with 25 and 15 minutes threshold, as we performed in simple classification decision tree.
+
 Results of random forest model on these datasets: 
 
+Threshold = 15
 ```{r, label='rf2'}
-##sensitivity check
-#threshold = 15
 rf_15 <- run_random(train_15) #run random forest
 rf_15
 pred_15 <- predict(rf_15, test_15) #prediction
 confusion_15 <- table(test_15$dep_delay, pred_15$predictions)
 confusion_15
 confusionMatrix(confusion_15)
+```
 
-
-#threshold = 25
+Threshold = 25
+```{r}
 rf_25 <- run_random(train_25) #run random forest
 rf_25
 pred_25 <- predict(rf_25, test_25) #prediction
@@ -2614,6 +2633,10 @@ In conclusion, we have shown that it is possible to predict if there will be a d
 
 For further research, it is worthwhile to implement the model on current databases for two reasons; The first is to verify the model and see that it is not adjusted only for 2013. Second, since the Corona epidemic, the world of flights has changed. The pandemic inflicted a heavy toll on global aviation, which resulted in ratings downgrades, liquidation, and bankruptcy of several airlines and airports due to severe cash burn instigated by travel restrictions. (Dube et al. 2021)
 In addition, our work divided the data into a binary form and used classification models to predict delayed or non-delayed flights. An improvement of the model can also include using a random forest that calculates regression and makes it possible to get an exact number of minutes of delay.
+
+
+
+
 
 #### References
 
