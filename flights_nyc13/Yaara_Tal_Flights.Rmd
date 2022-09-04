@@ -2114,7 +2114,9 @@ As we prefer to reduce the number of predicting variables in our model to preven
 
 ```{r echo=FALSE}
 
-flights_full_arranged<-flights_full_arranged %>% select(-c(model, manufacturer))
+flights_full_arranged <- flights_full_arranged %>% select(-c(model, manufacturer))
+flights_full_arranged_15 <- flights_full_arranged_15 %>% select(-c(model, manufacturer))
+flights_full_arranged_25 <-flights_full_arranged_25 %>% select(-c(model, manufacturer))
 ncol(flights_full_arranged)
 head(flights_full_arranged)
 ```
