@@ -2469,6 +2469,7 @@ run_random <- function(train, ntrees=1000, depth = NULL) {
     importance = 'impurity',
     max.depth = depth,
     verbose = TRUE,
+    seed = 26
     
   )
   return(fit)
@@ -2485,6 +2486,7 @@ We can see that the OOB prediction error is very low, which means the estimated 
 Prediction of the test data set:
 
 ```{r}
+test <- test %>% drop_na(year.y, temp, humid, wind_dir, wind_speed, pressure)
 pred <- predict(rf, test)
 confusion <- table(test$dep_delay, pred$predictions)
 
@@ -2503,6 +2505,7 @@ Threshold = 15
 ```{r, label='rf2'}
 rf_15 <- run_random(train_15) #run random forest
 rf_15
+test_15 <- test_15 %>% drop_na(year.y, temp, humid, wind_dir, wind_speed, pressure)
 pred_15 <- predict(rf_15, test_15) #prediction
 confusion_15 <- table(test_15$dep_delay, pred_15$predictions)
 confusion_15
@@ -2513,6 +2516,7 @@ Threshold = 25
 ```{r}
 rf_25 <- run_random(train_25) #run random forest
 rf_25
+test_25 <- test_25 %>% drop_na(year.y, temp, humid, wind_dir, wind_speed, pressure)
 pred_25 <- predict(rf_25, test_25) #prediction
 confusion_25 <- table(test_25$dep_delay, pred_25$predictions)
 confusion_25
