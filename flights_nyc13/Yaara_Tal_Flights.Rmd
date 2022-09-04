@@ -2298,7 +2298,7 @@ hyperparam.plot <- hyperparam.plot %>% add_markers() %>% layout(title="Tuning hy
 hyperparam.plot
 ```
 
-parameters tuning results shows that cp parameter is most affecting the accuracy results on validation set - specifically low cp leads to better mean accuracy of the validation data set. As a result we conducted addition check to evaluate train and test accuracy with critical values of 'cp' parameter.Thus we ran our classification model once with cp=0.00005 and once with cp=0.0001 in order to decide which value yields better and similar train and test accuracy. Large difference between train and test accuracies may indicates on overfitting - a situation when model learned too much the training dataset such that it doesn't predict good observations that were previously unseen.
+parameters tuning results showed that cp parameter is most affecting the accuracy results on validation set - specifically low cp leads to better mean accuracy of the validation data set. As a result we conducted addition check to evaluate train and test accuracy with critical values of 'cp' parameter.Thus we ran our classification model once with cp=0.00005 and once with cp=0.0001 in order to decide which value yields better and similar train and test accuracy. Large difference between train and test accuracies may indicates on overfitting - a situation when model learned too much the training dataset such that it doesn't predict good observations that were previously unseen.
 
 In order to evaluate the model we would like to estimate the accuracy - a metric used in classification problems to tell the percentage of accurate predictions. Accuracy is calculated by dividing the number of correct predictions (true positive and true negative) by the total number of samples obtained from confusion matrix.
 
@@ -2335,7 +2335,7 @@ predicted_class_test_best<- predict(best_class, test, type = 'class')
 accuracy_test_class_best_20<-accuracy(test$dep_delay, predicted_class_test_best)
 accuracy_test_class_best_20
 ```
-Choosing cp=0.0001 shows similar results in train and test accuracy (difference around 0.04 which is approximately 5% of test accuracy value=0.7). Those similar results reflecting there is no overfitting in our model and the current parameters values comtributing to better classification of unseen flights.
+Choosing cp=0.0001 shows similar results in train and test accuracy (difference around 6% of test accuracy value=0.7). Those similar results reflecting there is no overfitting in our model and the current parameters values comtributing to better classification of unseen flights.
 
 
 Since a classification model with cp=0.0001 visually looked excessively branched, we plotted a tree with cp=0.0004 which is much less brunched and thus can serves as a visual demonstration (but not accurate) for our model and enables easily interpretation of the decision process in our classification model.
@@ -2384,23 +2384,23 @@ Performing our model on these datasets:
 
 Threshold = 15
 ```{r}
-class_15 <- rpart(dep_delay~ ., data=train_15, method = 'class', control = c(cp=0.0001)) #maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)) #run classification decision tree
+class_15 <- rpart(dep_delay~ ., data=train_15, method = 'class', control = c(cp=0.0001), maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit) #run classification decision tree
 
 pred_class_15 <- predict(class_15, test_15, type = 'class') #prediction
 confusion_class_15 <- confusionMatrix(pred_class_15, test_15$dep_delay)
 confusion_class_15
-accuracy_num_class_15<-accuracy(test$dep_delay, pred_class_15)
+accuracy_num_class_15<-accuracy(test_15$dep_delay, pred_class_15)
 ```
 
 
 Threshold = 25
 ```{r}
-class_25 <- rpart(dep_delay~ ., data=train_25, method = 'class', control = c(cp=0.0001)) #maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)) #run classification decision tree
+class_25 <- rpart(dep_delay~ ., data=train_25, method = 'class', control = c(cp=0.0001), maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit) #run classification decision tree
 
 pred_class_25 <- predict(class_25, test_25, type = 'class') #prediction
 confusion_class_25 <- confusionMatrix(pred_class_25, test_25$dep_delay)
 confusion_class_25
-accuracy_num_class_25<-accuracy(test$dep_delay, pred_class_25)
+accuracy_num_class_25<-accuracy(test_25$dep_delay, pred_class_25)
 ```
 
 A visualization of all test confusion matrices (of datasets based on threshold=20, threshold=15 and threshold=25 defining delayed flights):
@@ -2506,11 +2506,18 @@ We can see that the OOB prediction error is very low, which means the estimated 
 Prediction of the test data set:
 
 ```{r}
+#train accuracy
+confusion_rf_train <- table(train$dep_delay, rf$predictions)
+confusion_rf_train
+confusionMatrix(confusion_rf_train)
+
+#test accuracy
 test <- test %>% drop_na(year.y, temp, humid, wind_dir, wind_speed, pressure)
 pred <- predict(rf, test)
 confusion <- table(test$dep_delay, pred$predictions)
-
 confusionMatrix(confusion)
+
+
 ```
 
 As we can see we have high accuracy for predicting delay!
@@ -2527,9 +2534,18 @@ rf_15 <- run_random(train_15) #run random forest
 rf_15
 test_15 <- test_15 %>% drop_na(year.y, temp, humid, wind_dir, wind_speed, pressure)
 pred_15 <- predict(rf_15, test_15) #prediction
+
+#train 15 accuracy
+confusion_15_train <- table(train_15$dep_delay, rf_15$predictions)
+confusion_15_train
+confusionMatrix(confusion_15_train)
+
+
+#test 15 accuracy
 confusion_15 <- table(test_15$dep_delay, pred_15$predictions)
 confusion_15
 confusionMatrix(confusion_15)
+
 ```
 
 Threshold = 25
@@ -2538,9 +2554,18 @@ rf_25 <- run_random(train_25) #run random forest
 rf_25
 test_25 <- test_25 %>% drop_na(year.y, temp, humid, wind_dir, wind_speed, pressure)
 pred_25 <- predict(rf_25, test_25) #prediction
+
+#train 25 accuracy
+confusion_25_train <- table(train_25$dep_delay, rf_25$predictions)
+confusion_25_train
+confusionMatrix(confusion_25_train)
+
+
+#test 25 accuracy
 confusion_25 <- table(test_25$dep_delay, pred_25$predictions)
 confusion_25
 confusionMatrix(confusion_25)
+
 ```
 
 A visualization of the confusion matrices:
@@ -2643,7 +2668,13 @@ grid.arrange(p2, p3, ncol = 2)
 Check for overfit with twice the number of trees and a limited depth for the trees:
 
 ```{r, label='overfit'}
-rf_check <- run_random(train, ntrees = 2000, depth = 20)
+rf_check <- run_random(train, ntrees = 2000, depth = 10)
+#train accuracy
+confusion_rf_train_check <- table(train$dep_delay, rf_check$predictions)
+confusion_rf_train_check
+confusionMatrix(confusion_rf_train_check)
+
+#test accuracy
 pred_check <- predict(rf_check, test)
 confusion_check <- table(test$dep_delay, pred_check$predictions)
 confusionMatrix(confusion_check)
@@ -2670,22 +2701,25 @@ imps_check %>%
 
 ## Discussion
 
-We pre-processed the data to optimize each parameter's potential to be helpful in prediction. We used permutation tests to determine which of the levels in each categorical variable with many levels are significant in predicting delays.
+We pre-processed the data to optimize each parameter's potential to be helpful in prediction. We used permutation tests to determine which of the levels in each categorical variable with many levels are significant in predicting delayed flights.
+Part of the pre-processing included a Pearson correlation test to find numeric variables that are highly correlated to reduce the number of variables to include in our models. 
+We converted the variable dep_delay from a delay in minutes to a binary variable. 0- no delay, 1- there is a delay. The division was made based on a threshold of 20 minutes late. In order to test the predictions' sensitivity to this threshold, we created two additional datasets, one with a higher threshold (25 minutes) and one with a lower threshold (15 minutes), and trained the predictive models on these two datasets.
+Unfortunately, in both models, Decision Tree and Random Forest, we observed differences between the test accuracy of the primary dataset compared to the test accuracy of the datasets from the sensitivity checks. This means that the delay threshold value we set, dramatically affects the results. 
+Note: both sensitivity checks resulted in the same results and were more accurate in prediction than the original dataset, raising our suspicion that these results are somehow skewed; this demands further examination.
+ 
+At first, we trained a Classification Decision Tree model that reached a test accuracy score of approximately 0.7 in delay prediction. In order to build an optimal Classification Decision Tree model, we performed a tuning parameters process. This process yielded the values for the model that will result in the most accurate prediction.
+One of the most affecting hyper-parameters was the Complexity Parameter (CP); the slightest changes in the CP parameter resulted in dramatic differences in the test and train accuracy scores. We finally chose a CP value that resulted in a tree that is not overfitting the training data on the one hand, and on the other hand, maintains a relatively high test accuracy. 
+We also examined whether a Random Forest model could learn the data better and predict more accurately. We assumed this model would perform better since Random Forests are considerably more robust than a single decision tree. They aggregate many decision trees to limit overfitting and error due to bias, and yield valuable results.
+The Random Forest model reached a  test accuracy of 0.78. The training accuracy was higher, 0.94. This is an improvement from the Decision Tree model. 
+In principle, the chance of an overfit in Random Forest is low thanks to bagging and random feature selection, it is trained independently on different subsets of the training data.
+However, the relatively big difference between the train and test accuracy scores raises our concern that the model may overfit the data. In order to examine the matter, we performed another run of the Random Forest model where we limited the maximum tree depth and increased the number of trees (from 1000 to 2000). The result of this run resulted in similar train and test accuracy scores (~0.7, and ~0.69).  This means we eliminated the possibilty of overfitting, but recieved a result that is very close to the one produced bt the single Decision Tree model. 
 
-We converted the variable dep_delay from a delay in minutes to a binary variable. 0- no delay, 1- there is a delay. The division was made based on a threshold of late minutes. In order to test the sensitivity to this threshold, we created two more datasets, one with a higher threshold and one with a lower threshold, and ran the prediction models on these two datasets. In both models, decision tree and random forest, there were no differences between the primary dataset and the datasets created for sensitivity testing.
-
-In the first step, we ran a decision tree model. This model reached an accuracy level of about 70% in delay prediction. In the second step, we wanted to check whether a Random Forest model could learn the data better and give a more accurate prediction. We thought this model would be better because random forests are much more robust than a single decision tree. They aggregate many decision trees to limit overfitting and error due to bias and yield valuable results.
-
-The Random Forest model reached a much higher level of accuracy than the decision tree, 98%. In principle, the chance of an overfit in Random Forest is low thanks to bagging and random feature selection; they are trained independently on different subsets of the training data.
-However, the high accuracy score raises our concern that the model may overfit the data. In order to examine the matter, we performed another run of the Random Forest model where we limited the maximum tree depth and increased the number of trees (from 1000 to 2000). The result of this run showed 94% accuracy, which is still high but is unlikely to be overfitted to the large number of trees and the limitation of the trees' depth. Further, the model is highly accurate for the test as well, so it may just be excellent at predicting. Another possible explanation is that there is indeed an overfit resulting from the fact that the training and the test are similar since they were taken from the same data set.
-In conclusion, we have shown that it is possible to predict if there will be a delay in takeoff with a high probability using a Random Forest model that considers various parameters related to weather, aircraft characteristics, airport, destination, airlines, etc.
+In conclusion, we have shown a proof of concept that it is possible to predict if there will be a delay in takeoff with a high probability using a Random Forest model that considers various parameters related to weather, aircraft characteristics, airport, destination, airlines, etc.
 
 ### Future Research
 
 For further research, it is worthwhile to implement the model on current databases for two reasons; The first is to verify the model and see that it is not adjusted only for 2013. Second, since the Corona epidemic, the world of flights has changed. The pandemic inflicted a heavy toll on global aviation, which resulted in ratings downgrades, liquidation, and bankruptcy of several airlines and airports due to severe cash burn instigated by travel restrictions. (Dube et al. 2021)
-In addition, our work divided the data into a binary form and used classification models to predict delayed or non-delayed flights. An improvement of the model can also include using a random forest that calculates regression and makes it possible to get an exact number of minutes of delay.
-
-
+In addition, our work divided the data into a binary form and used classification models to predict delayed or non-delayed flights. The downside of this approach is that the threshold set to determine if a flight was delayed affects the results. An improvement of the model can also include using a random forest that calculates regression and makes it possible to get an exact number of minutes of delay.
 
 
 
