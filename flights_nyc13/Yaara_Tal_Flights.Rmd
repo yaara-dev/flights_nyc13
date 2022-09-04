@@ -143,8 +143,8 @@ numeric_vars <- c(
   "humid",
   "dewp"
 )
-numeric_flights_full <-
-  flights_full[,numeric_vars]
+
+numeric_flights_full <- flights_full %>% select(all_of(numeric_vars))
 
 plot_list <- lapply(numeric_vars, plot_var_vs_dep_delay)
 
@@ -296,12 +296,11 @@ length(which(is.na(flights_full$wind_gust)))
 
 Since we would like to predict if a particular flight will be delayed, we logically selected a threshold indicating a significant delay on time - 20 minutes.
 
-Flights that depart earlier than 10 minutes before their scheduled time (departure delay \< -10) were removed from the following analysis since they may confuse our model and add noise, as we aim to predict positive delay. Those flights should be included in the analysis in case of prediction of negative delay.
+Flights that depart earlier than 10 minutes before their scheduled time (departure delay <= -10) were removed from the following analysis since they may confuse our model and add noise, as we aim to predict positive delay. Those flights with departure delay <= (-10) should be included in the analysis in case of prediction of negative delay.
 
 Here we assume that a flight is considered as delayed only if its departure time was delayed by 20 minutes or more. A flight is considered as departed on time, i.e, no delay, if its departure time is in the range of 10 minutes earlier and until 20 minutes late (not including 20 minutes late).
 
 ```{r}
-
 
 #divide the flights into 2 groups according to their dep_delay - flights above 20 min delay, and flights above -10 & until 20 min delay
 
@@ -343,9 +342,9 @@ flights_full_arranged$dep_delay <-
   as.factor(flights_full_arranged$dep_delay)
 
 
-#plot flights counts per 2 dep_delay categories
-ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
-                                                                             c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
+#plot flights counts per 2 dep_delay categories - add legend
+ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(stat="count") + 
+  scale_fill_manual(labels=c("0 = no delay", "1 = delay"), values = c('#CC6666', '#FFCCCC')) +
   labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
@@ -1178,9 +1177,9 @@ flights_full_arranged_15$dep_delay <-
 
 
 #plot flights counts per 2 dep_delay categories
-ggplot(flights_full_arranged_15, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
-                                                                                c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
-  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
+ggplot(flights_full_arranged_15, aes(dep_delay, fill = dep_delay)) +  geom_bar(stat="count") + 
+  scale_fill_manual(labels=c("0 = no delay", "1 = delay"), values = c('#CC6666', '#FFCCCC')) +
+  labs(title = "Flights counts per departure delay category (15)", x = "Departure delay categories") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 # merge manufacturer and model columns into one column
@@ -1275,7 +1274,7 @@ if (run_permutations) {
       perm_vec_var
     }
   
-  num_perm <- 500
+  num_perm <- 1000
   for (iter in 1:num_perm) {
     print(iter)
     flights_full_perm <-
@@ -1326,7 +1325,7 @@ if (run_permutations) {
   perm_ndelay_vec_model_df = tibble(name = names(perm_ndelay_vec_model), value = perm_ndelay_vec_model)
   write.table(
     perm_ndelay_vec_model_df ,
-    file = "../output/perm_ndelay_vec_model_df_15_1.csv",
+    file = "../output/perm_ndelay_merged_vec_model_df_15.csv",
     sep = ",",
     row.names = FALSE
   )
@@ -1334,7 +1333,7 @@ if (run_permutations) {
                                            value = perm_ndelay_vec_manufacturer)
   write.table(
     perm_ndelay_vec_manufacturer_df ,
-    file = "../output/perm_ndelay_vec_manufacturer_df_15_1.csv",
+    file = "../output/perm_ndelay_merged_vec_manufacturer_df_15.csv",
     sep = ",",
     row.names = FALSE
   )
@@ -1342,71 +1341,25 @@ if (run_permutations) {
                                          value = perm_ndelay_vec_manu_model)
   write.table(
     perm_ndelay_vec_manu_model_df ,
-    file = "../output/final_project/perm_ndelay_vec_manu_model_df_15_1.csv",
+    file = "../output/final_project/perm_ndelay_merged_vec_manu_model_df_15.csv",
     sep = ",",
     row.names = FALSE
   )
   perm_ndelay_vec_dest_df = tibble(name = names(perm_ndelay_vec_dest), value = perm_ndelay_vec_dest)
   write.table(
     perm_ndelay_vec_dest_df ,
-    file = "../output/perm_ndelay_vec_dest_df_15_1.csv",
+    file = "../output/perm_ndelay_merged_vec_dest_df_15.csv",
     sep = ",",
     row.names = FALSE
   )
   perm_ndelay_vec_seats_df = tibble(name = names(perm_ndelay_vec_seats), value = perm_ndelay_vec_seats)
   write.table(
     perm_ndelay_vec_seats_df ,
-    file = "../output/perm_ndelay_vec_seats_df_15_1.csv",
+    file = "../output/perm_ndelay_merged_vec_seats_df_15.csv",
     sep = ",",
     row.names = FALSE
   )
-  
-  #merge all df from permutation test to 1 summed df for each variable
-  merge_df <- function(var_name) {
-    # before merging all dfs observed from multiple observations
-    perm_ndelay_var_df_1 <-
-      read.table(
-        file = paste(
-          "../output/perm_ndelay_vec_",
-          var_name,
-          "_df_15_1.csv",
-          sep = ""
-        ),
-        sep = ",",
-        header = TRUE
-      )
-    perm_ndelay_var_df_2 <-
-      read.table(
-        file = paste(
-          "../output/perm_ndelay_vec_",
-          var_name,
-          "_df_15_2.csv",
-          sep = ""
-        ),
-        sep = ",",
-        header = TRUE
-      )
-    perm_ndelay_var_df_1$value <-
-      perm_ndelay_var_df_1$value + perm_ndelay_var_df_2$value - 1
-    write.table(
-      perm_ndelay_var_df_1 ,
-      file = paste(
-        "../output/perm_ndelay_merged_vec_",
-        var_name,
-        "_df_15.csv",
-        sep = ""
-      ),
-      sep = ",",
-      row.names = FALSE
-    )
-    perm_ndelay_var_df_1
-  }
-  model_df_merged <- merge_df("model")
-  manu_df_merged <- merge_df("manufacturer")
-  manu_model_df_merged <- merge_df("manu_model")
-  dest_df_merged <- merge_df("dest")
-  seats_df_merged <- merge_df("seats")
-  
+
 }
 
 
@@ -1709,9 +1662,9 @@ flights_full_arranged_25$dep_delay <-
 
 
 #plot flights counts per 2 dep_delay categories
-ggplot(flights_full_arranged_25, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
-                                                                                c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
-  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
+ggplot(flights_full_arranged_25, aes(dep_delay, fill = dep_delay)) + geom_bar(stat="count") + 
+  scale_fill_manual(labels=c("0 = no delay", "1 = delay"), values = c('#CC6666', '#FFCCCC')) +
+  labs(title = "Flights counts per departure delay category (25)", x = "Departure delay categories") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 
@@ -1736,6 +1689,7 @@ levels_seats <-
   levels(factor(flights_full_arranged_25$seats)) #levels of seats
 
 run_permutations = FALSE
+
 if (run_permutations) {
   origin_num_delay_var <- function(var_name, levels_var) {
     origin_delay_vec <-
@@ -1806,7 +1760,7 @@ if (run_permutations) {
       perm_vec_var
     }
   
-  num_perm <- 500
+  num_perm <- 1000
   for (iter in 1:num_perm) {
     print(iter)
     flights_full_perm <-
@@ -1857,7 +1811,7 @@ if (run_permutations) {
   perm_ndelay_vec_model_df = tibble(name = names(perm_ndelay_vec_model), value = perm_ndelay_vec_model)
   write.table(
     perm_ndelay_vec_model_df ,
-    file = "../output/perm_ndelay_vec_model_df_25_1.csv",
+    file = "../output/perm_ndelay_merged_vec_model_df_25.csv",
     sep = ",",
     row.names = FALSE
   )
@@ -1865,7 +1819,7 @@ if (run_permutations) {
                                            value = perm_ndelay_vec_manufacturer)
   write.table(
     perm_ndelay_vec_manufacturer_df ,
-    file = "../output/perm_ndelay_vec_manufacturer_df_25_1.csv",
+    file = "../output/perm_ndelay_merged_vec_manufacturer_df_25.csv",
     sep = ",",
     row.names = FALSE
   )
@@ -1873,71 +1827,24 @@ if (run_permutations) {
                                          value = perm_ndelay_vec_manu_model)
   write.table(
     perm_ndelay_vec_manu_model_df ,
-    file = "../output/perm_ndelay_vec_manu_model_df_25_1.csv",
+    file = "../output/perm_ndelay_merged_vec_manu_model_df_25.csv",
     sep = ",",
     row.names = FALSE
   )
   perm_ndelay_vec_dest_df = tibble(name = names(perm_ndelay_vec_dest), value = perm_ndelay_vec_dest)
   write.table(
     perm_ndelay_vec_dest_df ,
-    file = "../output/perm_ndelay_vec_dest_df_25_1.csv",
+    file = "../output/perm_ndelay_merged_vec_dest_df_25.csv",
     sep = ",",
     row.names = FALSE
   )
   perm_ndelay_vec_seats_df = tibble(name = names(perm_ndelay_vec_seats), value = perm_ndelay_vec_seats)
   write.table(
     perm_ndelay_vec_seats_df ,
-    file = "../output/perm_ndelay_vec_seats_df_25_1.csv",
+    file = "../output/perm_ndelay_merged_vec_seats_df_25.csv",
     sep = ",",
     row.names = FALSE
   )
-  
-  #merge all df from permutation test to 1 summed df for each variable
-  merge_df <- function(var_name) {
-    # before merging all dfs observed from multiple observations
-    perm_ndelay_var_df_1 <-
-      read.table(
-        file = paste(
-          "../output/perm_ndelay_vec_",
-          var_name,
-          "_df_25_1.csv",
-          sep = ""
-        ),
-        sep = ",",
-        header = TRUE
-      )
-    perm_ndelay_var_df_2 <-
-      read.table(
-        file = paste(
-          "../output/perm_ndelay_vec_",
-          var_name,
-          "_df_25_2.csv",
-          sep = ""
-        ),
-        sep = ",",
-        header = TRUE
-      )
-    perm_ndelay_var_df_1$value <-
-      perm_ndelay_var_df_1$value + perm_ndelay_var_df_2$value - 1
-    write.table(
-      perm_ndelay_var_df_1 ,
-      file = paste(
-        "../output/perm_ndelay_merged_vec_",
-        var_name,
-        "_df_25.csv",
-        sep = ""
-      ),
-      sep = ",",
-      row.names = FALSE
-    )
-    perm_ndelay_var_df_1
-  }
-  model_df_merged <- merge_df("model")
-  manu_df_merged <- merge_df("manufacturer")
-  manu_model_df_merged <- merge_df("manu_model")
-  dest_df_merged <- merge_df("dest")
-  seats_df_merged <- merge_df("seats")
-  
 }
 
 
@@ -2199,7 +2106,7 @@ As we prefer to reduce number of predicting variables in our model to prevent co
 
 flights_full_arranged<-flights_full_arranged %>% select(-c(model, manufacturer))
 ncol(flights_full_arranged)
-
+head(flights_full_arranged)
 ```
 
 
@@ -2211,20 +2118,9 @@ There are mainly two ways to handle an imbalanced dataset.
 We are using ovun.sample function from the ROSE package, which creates possibly balanced samples by a combination of random over-sampling minority examples and under-sampling
 majority examples.
 
-
-This is the data proportion before balancing:
-```{r echo=FALSE}
-
+```{r}
 set.seed(20)
 
-ggplot(flights_full_arranged, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
-                                                                             c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
-  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
-  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-head(flights_full_arranged)
-```
-
-```{r}
 get_balanced_df <- function(flights_full_arranged) {
   balanced.data <-
     ovun.sample(
@@ -2240,7 +2136,7 @@ get_balanced_df <- function(flights_full_arranged) {
 ```
 
 ```{r}
-# #balanced_data
+#balanced_data
  balanced_data <- get_balanced_df(flights_full_arranged)
  table(balanced_data$dep_delay)
 ```
@@ -2248,9 +2144,9 @@ get_balanced_df <- function(flights_full_arranged) {
 And this is after balancing the data:
 ```{r echo=FALSE}
 #plot flights counts per 2 dep_delay categories
-ggplot(balanced_data, aes(dep_delay, fill = dep_delay)) + geom_bar(fill =
-                                                                     c('#CC6666', '#FFCCCC')) +     #'#660000', '#993333', '#CC6666'"#FFCCCC"
-  labs(title = "Flights counts per departure delay category", x = "Departure delay categories") +
+ggplot(balanced_data, aes(dep_delay, fill = dep_delay)) + geom_bar(stat="count") + 
+  scale_fill_manual(labels=c("0 = no delay", "1 = delay"), values = c('#CC6666', '#FFCCCC')) +
+  labs(title = "Flights counts per departure delay category (balanced)", x = "Departure delay categories") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 ```
@@ -2277,7 +2173,7 @@ dim(train)
 dim(test)
 ```
 
-For sensitivity check:
+sensitivity check - creation of balanced data and splitting into train-test data sets:
 
 ```{r}
 #threshold = 15
@@ -2292,7 +2188,8 @@ test_25 <- train_test_split(balanced_data_25)[[2]]
 ```
 
 ### Classification Decision Tree
-First, we would like to choose best parameters for optimizing model's prediction. Thus, we will use 'mlr' package 
+
+Before running prediction model, we would like to choose best parameters for optimizing the model. Thus, we used the machine learning 'mlr' R package that supplies tools to train several different models and to perform tuning for hyperparameters. Using this tools we can view each hyperparameter impact on the performance of the model.In rpart decision tree library, we control the parameters using the rpart.control() function.
 
 ```{r}
 train_df<-as.data.frame(train)
@@ -2333,7 +2230,7 @@ dt_tuneparam
 result_hyperparam <- generateHyperParsEffectData(dt_tuneparam, partial.dep = TRUE)
 ```
 
-plot of mean accuracy test as a function of cp parameter during tuning parameters
+Plot of mean accuracy test as a function of cp parameter during tuning parameters
 
 ```{r}
 ggplot(
@@ -2362,15 +2259,15 @@ hyperparam.plot <- plot_ly(result_sample,
                            y = ~maxdepth, 
                            z = ~minsplit,
                            marker = list(color = ~acc.test.mean,  colorscale = list(c(0, 1), c("darkred", "darkgreen")), showscale = TRUE))
-hyperparam.plot <- hyperparam.plot %>% add_markers()
+hyperparam.plot <- hyperparam.plot %>% add_markers() %>% layout(title="Tuning hyperparameters results")
 hyperparam.plot
 ```
 
-Run classification decision tree on train set with best max depth and min split parameters' values. We chose cp=0.0004 instead of cp=0.0001 despite it outputs worse accuracy test, because cp=0.0004 enables visualization and interpretation of important predicting variables required in this project. 
+Run classification decision tree on train set with best 'max depth' parameter value and 'min split' parameter value. We chose cp=0.0004 instead of cp=0.0001 despite it outputs worse accuracy test, because cp=0.0004 enables visualization and better interpretation of important predicting variables. Ideally we would like to choose cp=0.0001 which gives higher accuracy on validation data set as observed during tuning parameters. overfitting????
 
 ```{r}
 # build model according to best parameters 
-model_best_param = rpart(dep_delay~ .,   data=train, method = 'class', control = c(cp=0.0004, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit))
+class_best_param = rpart(dep_delay~ .,   data=train, method = 'class', control = c(cp=0.0004, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit))
 ```
 
 Visualization of the tree:
@@ -2388,38 +2285,85 @@ split.fun <- function(x, labs, digits, varlen, faclen)
   labs
 }
 
-rpart.plot(model_best_param, split.fun = split.fun)
+rpart.plot(class_best_param, split.fun = split.fun)
 
+```
+
+Prediction on test data set:
+
+```{r}
+predicted_class<- predict(class_best_param, test, type = 'class')
 ```
 
 Calculate a confusion matrix which shows the number of correct negative predictions, the number of incorrect positive predictions, the number of incorrect negative prediction, and the number of correct positive predictions (Visa, Ramsay, Ralescu, & Van Der Knaap, 2011).
 
 ```{r}
-confusion <- confusionMatrix(predicted_values, test$dep_delay)
-confusion
+confusion_class <- confusionMatrix(predicted_class, test$dep_delay)
+confusion_class
 ```
 
-We would like to estimate the accuracy - a metric used in classification problems used to tell the percentage of accurate predictions. Accuracy is calculated by dividing the number of correct predictions by the total number of samples.
+We would like to estimate the accuracy of test data set - a metric used in classification problems to tell the percentage of accurate predictions. Accuracy is calculated by dividing the number of correct predictions (true positive and true negative) by the total number of samples obtained from confusion matrix.
 
 ```{r}
-predicted_values<- predict(model_best_param, test, type = 'class')
-accuracy_num<-accuracy(test$dep_delay, predicted_values)
-accuracy_num
+accuracy_num_class<-accuracy(test$dep_delay, predicted_class)
+accuracy_num_class
 ```
 
-Plot Confusion Matrix
+We can see from the low test accuracy score shown above that our model failed to predict successfully delayed flights.
+
+
+#### comparing classification decision tree (with threshold=20) results to sensitivity checks (tresholds 15 and 25) results
+
+As mentioned earlier, we chose 20 minutes as a threshold to determine if a flight is considered delayed. We generated two additional datasets: one with a higher threshold (25 minutes) and one with a lower threshold (15 minutes) in order to test the sensitivity of our predictions.
+Performing our model on these datasets:
 
 ```{r}
-plot(confusion$table,
-     xlab = 'Predicted',
-     ylab = 'True',
-     main= sprintf('Predicted vs Obsvered confusion matrix with\n accuracy score: %s', round(accuracy_num,3)))
+##sensitivity check
+#threshold = 15
+class_15 <- rpart(dep_delay~ ., data=train_15, method = 'class', control = c(cp=0.0004, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)) #run classification decision tree
+pred_class_15 <- predict(class_15, test_15, type = 'class') #prediction
+confusion_class_15 <- confusionMatrix(pred_class_15, test_15$dep_delay)
+confusion_class_15
+accuracy_num_class_15<-accuracy(test$dep_delay, pred_class_15)
+
+
+#threshold = 25
+class_25 <- rpart(dep_delay~ ., data=train_25, method = 'class', control = c(cp=0.0004, maxdepth = dt_tuneparam$x$maxdepth, minsplit = dt_tuneparam$x$minsplit)) #run classification decision tree
+pred_class_25 <- predict(class_25, test_25, type = 'class') #prediction
+confusion_class_25 <- confusionMatrix(pred_class_25, test_25$dep_delay)
+confusion_class_25
+accuracy_num_class_25<-accuracy(test$dep_delay, pred_class_25)
 ```
 
-Find important variables:
+A visualization of all confusion matrices (of datasets based on threshold=20, threshold=15 and threshold=25 defining delayed flights):
+
+```{r echo=FALSE}
+
+par(mfrow = c(1, 3))
+# plot confusion matrix
+plot(
+  confusion_class$table,
+  xlab = 'Predicted',
+  ylab = 'True',
+  main = sprintf('Predicted vs Obsvered confusion matrix (20)\n accuracy score: %s', round(accuracy_num_class,3)))
+
+plot(
+  confusion_class_15$table,
+  xlab = 'Predicted',
+  ylab = 'True',
+  main = sprintf('Predicted vs Obsvered confusion matrix (15)\n accuracy score: %s', round(accuracy_num_class_15,3)))
+
+plot(
+  confusion_class_25$table,
+  xlab = 'Predicted',
+  ylab = 'True',
+  main = sprintf('Predicted vs Obsvered confusion matrix (25)\n accuracy score: %s', round(accuracy_num_class_25,3)))
+```
+
+Plot of each predictor's importance in simple classification tree model when the threshold=20:
 
 ```{r}
-class_model$variable.importance %>%
+class_best_param$variable.importance %>%
   data.frame() %>%
   rownames_to_column(var = "Feature") %>%
   rename(Overall = '.') %>%
@@ -2427,9 +2371,40 @@ class_model$variable.importance %>%
   geom_pointrange(aes(ymin = 0, ymax = Overall), color = "cadetblue", size = .3) +
   theme_minimal() +
   coord_flip() +
-  labs(x = "", y = "", title = "Variable Importance with Simple Classication")+
+  labs(x = "", y = "", title = "Variable Importance with Simple Classication (20)")+
   theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
 ```
+
+Plot of each predictor's importance in simple classification tree model in case of threshold=15:
+
+```{r}
+class_15$variable.importance %>%
+  data.frame() %>%
+  rownames_to_column(var = "Feature") %>%
+  rename(Overall = '.') %>%
+  ggplot(aes(x = fct_reorder(Feature, Overall), y = Overall)) +
+  geom_pointrange(aes(ymin = 0, ymax = Overall), color = "cadetblue", size = .3) +
+  theme_minimal() +
+  coord_flip() +
+  labs(x = "", y = "", title = "Variable Importance with Simple Classication (15)")+
+  theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
+```
+
+Plot of each predictor's importance in simple classification tree model in case of threshold=25:
+
+```{r}
+class_25$variable.importance %>%
+  data.frame() %>%
+  rownames_to_column(var = "Feature") %>%
+  rename(Overall = '.') %>%
+  ggplot(aes(x = fct_reorder(Feature, Overall), y = Overall)) +
+  geom_pointrange(aes(ymin = 0, ymax = Overall), color = "cadetblue", size = .3) +
+  theme_minimal() +
+  coord_flip() +
+  labs(x = "", y = "", title = "Variable Importance with Simple Classication (25)")+
+  theme(plot.title = element_text(hjust = 0.5, size = 19, face = "bold"))
+```
+
 
 ### Random Forest Model
 
@@ -2459,7 +2434,7 @@ rf
 
 We can see that the OOB prediction error is very low, which means the estimated accuracy is high!
 
-Now, let's predict the test data:
+Prediction of the test data set:
 
 ```{r}
 pred <- predict(rf, test)
@@ -2470,7 +2445,8 @@ confusionMatrix(confusion)
 
 As we can see we have high accuracy for predicting delay!
 
-Earlier on we chose 20 minutes as a threshold to determine if a flight is considered delayed.We generated two additional datasets: one with a higher threshold (25 minutes) and one with a lower threshold (15 minutes) in order to test the sensitivity of our predictions. Let's run our model on these datasets: Let's run our model on these datasets:
+Running random forest model followed with sensitivity checks. We applied the current random forest model on a data based on 20 minutes threshold as definition for delayed flight and 15 minutes threshold, as we performed in simple classification decision tree.
+Results of random forest model on these datasets: 
 
 ```{r, label='rf2'}
 ##sensitivity check
@@ -2492,7 +2468,7 @@ confusion_25
 confusionMatrix(confusion_25)
 ```
 
-Here is a visualization of the confusion matrices:
+A visualization of the confusion matrices:
 
 ```{r echo=FALSE}
 
@@ -2534,7 +2510,7 @@ plot(
 
 ```
 
-Lastly, we would like to know the importance of each predictor:
+Lastly, we produced the importance of each predictor:
 
 ```{r}
 get_importance <- function(rf) {
@@ -2552,7 +2528,7 @@ imps_15 <- get_importance(rf_15)
 imps_25 <- get_importance(rf_25)
 ```
 
-Plot importance:
+Plot of predictors' importance:
 
 ```{r echo=FALSE}
 p1 <- imps %>%
