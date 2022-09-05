@@ -2,12 +2,13 @@
 title: "Prediction of Flight Departure Delays"
 author: "Yaara Diamant Karasik & Tal Goldberg"
 date: "2022-09-04"
-output: html_document
+output: 
+  md_document:
+    variant: markdown_github
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
-                      echo=TRUE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8,echo=TRUE, warning=FALSE, message=FALSE)
 ```
 
 ## Introduction
